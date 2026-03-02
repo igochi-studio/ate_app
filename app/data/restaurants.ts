@@ -1,0 +1,322 @@
+export interface Restaurant {
+  id: string;
+  name: string;
+  cuisine: string;
+  priceRange: string;
+  rating: number;
+  ratingSource: string;
+  lat: number;
+  lng: number;
+  photo: string;
+  available: boolean;
+  spotsLeft: number | null;
+  nextAvailable: string | null;
+  timeSlots: string[];
+  cyclingMinutes: number;
+  vibes: string[];
+  bestTime: string;
+  instagram: string;
+  website: string;
+  maxDuration: number | null;
+  description: string;
+}
+
+export interface Event {
+  id: string;
+  name: string;
+  date: string;
+  restaurantId: string | null;
+  photos: string[];
+  notes: string;
+  liked: string;
+  disliked: string;
+  ambience: string;
+  personalRating: number;
+  wouldVisitAgain: "yes" | "maybe" | "no";
+  isTradition: boolean;
+  emoji: string;
+}
+
+// Amsterdam-centered mock restaurants
+export const mockRestaurants: Restaurant[] = [
+  {
+    id: "1",
+    name: "Restaurant De Kas",
+    cuisine: "Modern European",
+    priceRange: "€€€",
+    rating: 4.6,
+    ratingSource: "Google",
+    lat: 52.3535,
+    lng: 4.9275,
+    photo: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&h=400&fit=crop",
+    available: true,
+    spotsLeft: 2,
+    nextAvailable: null,
+    timeSlots: ["18:30", "19:00", "20:30"],
+    cyclingMinutes: 8,
+    vibes: ["Date night", "Garden seating", "Seasonal"],
+    bestTime: "Tuesday–Thursday evenings",
+    instagram: "@restaurantdekas",
+    website: "https://restaurantdekas.com",
+    maxDuration: 120,
+    description: "Set in a former greenhouse, De Kas serves a daily-changing menu using ingredients from its own garden.",
+  },
+  {
+    id: "2",
+    name: "Rijsel",
+    cuisine: "French-Dutch",
+    priceRange: "€€",
+    rating: 4.7,
+    ratingSource: "Google",
+    lat: 52.3612,
+    lng: 4.9167,
+    photo: "https://images.unsplash.com/photo-1550966871-3ed3cdb51f3a?w=600&h=400&fit=crop",
+    available: true,
+    spotsLeft: 5,
+    nextAvailable: null,
+    timeSlots: ["18:00", "19:30", "20:00", "21:00"],
+    cyclingMinutes: 5,
+    vibes: ["Lively", "Group-friendly", "Casual fine"],
+    bestTime: "Weekday evenings",
+    instagram: "@rijselamsterdam",
+    website: "https://rijsel.com",
+    maxDuration: 90,
+    description: "Known for their legendary roast chicken and buzzy atmosphere in a former mechanics workshop.",
+  },
+  {
+    id: "3",
+    name: "Ciel Bleu",
+    cuisine: "French Fine Dining",
+    priceRange: "€€€€",
+    rating: 4.8,
+    ratingSource: "Google",
+    lat: 52.3395,
+    lng: 4.8830,
+    photo: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&h=400&fit=crop",
+    available: false,
+    spotsLeft: null,
+    nextAvailable: "Tomorrow 19:30",
+    timeSlots: [],
+    cyclingMinutes: 12,
+    vibes: ["Special occasion", "View", "Michelin star"],
+    bestTime: "Book 2 weeks ahead",
+    instagram: "@cielbleurestaurant",
+    website: "https://cielbleurestaurant.nl",
+    maxDuration: null,
+    description: "Two Michelin-starred restaurant on the 23rd floor of the Okura Hotel with panoramic views of Amsterdam.",
+  },
+  {
+    id: "4",
+    name: "Mama Makan",
+    cuisine: "Indonesian",
+    priceRange: "€€",
+    rating: 4.5,
+    ratingSource: "Google",
+    lat: 52.3676,
+    lng: 4.8932,
+    photo: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&h=400&fit=crop",
+    available: true,
+    spotsLeft: 3,
+    nextAvailable: null,
+    timeSlots: ["18:00", "19:00", "20:00"],
+    cyclingMinutes: 6,
+    vibes: ["Cozy", "Family-friendly", "Authentic"],
+    bestTime: "Early evening",
+    instagram: "@mamamakan",
+    website: "https://mamamakan.nl",
+    maxDuration: 90,
+    description: "Authentic Indonesian home cooking in the heart of the Jordaan. Famous for their rijsttafel.",
+  },
+  {
+    id: "5",
+    name: "&moshik",
+    cuisine: "Modern Israeli",
+    priceRange: "€€€€",
+    rating: 4.9,
+    ratingSource: "Google",
+    lat: 52.3580,
+    lng: 4.8760,
+    photo: "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=600&h=400&fit=crop",
+    available: false,
+    spotsLeft: null,
+    nextAvailable: "Saturday 20:00",
+    timeSlots: [],
+    cyclingMinutes: 10,
+    vibes: ["Avant-garde", "Chef's table", "Tasting menu"],
+    bestTime: "Book 3 weeks ahead",
+    instagram: "@moshikroth",
+    website: "https://moshik.nl",
+    maxDuration: null,
+    description: "Two Michelin-starred tasting menu experience by Chef Moshik Roth.",
+  },
+  {
+    id: "6",
+    name: "Bar Parry",
+    cuisine: "Mediterranean",
+    priceRange: "€€",
+    rating: 4.4,
+    ratingSource: "Google",
+    lat: 52.3700,
+    lng: 4.8830,
+    photo: "https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?w=600&h=400&fit=crop",
+    available: true,
+    spotsLeft: 8,
+    nextAvailable: null,
+    timeSlots: ["17:30", "18:30", "19:30", "20:30", "21:30"],
+    cyclingMinutes: 4,
+    vibes: ["Casual", "Wine bar", "Terrace"],
+    bestTime: "Any evening",
+    instagram: "@barparry",
+    website: "https://barparry.nl",
+    maxDuration: null,
+    description: "Laid-back Mediterranean wine bar in the Jordaan with a lovely terrace.",
+  },
+  {
+    id: "7",
+    name: "Warung Spang Makandra",
+    cuisine: "Surinamese",
+    priceRange: "€",
+    rating: 4.3,
+    ratingSource: "Google",
+    lat: 52.3540,
+    lng: 4.9120,
+    photo: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=400&fit=crop",
+    available: true,
+    spotsLeft: null,
+    nextAvailable: null,
+    timeSlots: ["17:00", "18:00", "19:00", "20:00"],
+    cyclingMinutes: 7,
+    vibes: ["Casual", "Local favourite", "Authentic"],
+    bestTime: "Anytime",
+    instagram: "@spangmakandra",
+    website: "https://spangmakandra.nl",
+    maxDuration: null,
+    description: "The best Surinamese food in Amsterdam. No-frills, incredible flavour.",
+  },
+  {
+    id: "8",
+    name: "Kaagman & Kortekaas",
+    cuisine: "Modern Dutch",
+    priceRange: "€€€",
+    rating: 4.6,
+    ratingSource: "Google",
+    lat: 52.3650,
+    lng: 4.9010,
+    photo: "https://images.unsplash.com/photo-1600891964599-f94d51f5bde3?w=600&h=400&fit=crop",
+    available: true,
+    spotsLeft: 1,
+    nextAvailable: null,
+    timeSlots: ["19:00", "21:00"],
+    cyclingMinutes: 3,
+    vibes: ["Date night", "Intimate", "Wine pairing"],
+    bestTime: "Mid-week for best availability",
+    instagram: "@kaagmanenkortekaas",
+    website: "https://kaagmanenkortekaas.nl",
+    maxDuration: 120,
+    description: "Intimate neighbourhood restaurant with a daily-changing 4-course menu.",
+  },
+  {
+    id: "9",
+    name: "Toscanini",
+    cuisine: "Italian",
+    priceRange: "€€€",
+    rating: 4.5,
+    ratingSource: "Google",
+    lat: 52.3730,
+    lng: 4.8790,
+    photo: "https://images.unsplash.com/photo-1579027989536-b7b1f875659b?w=600&h=400&fit=crop",
+    available: false,
+    spotsLeft: null,
+    nextAvailable: "Thursday 19:00",
+    timeSlots: [],
+    cyclingMinutes: 9,
+    vibes: ["Classic", "Group-friendly", "Italian soul"],
+    bestTime: "Weekday lunch",
+    instagram: "@toscaniniamsterdam",
+    website: "https://toscanini.nl",
+    maxDuration: null,
+    description: "Amsterdam's most beloved Italian restaurant. Authentic, generous, packed every night.",
+  },
+  {
+    id: "10",
+    name: "Volt",
+    cuisine: "Bistronomy",
+    priceRange: "€€",
+    rating: 4.4,
+    ratingSource: "Google",
+    lat: 52.3660,
+    lng: 4.8960,
+    photo: "https://images.unsplash.com/photo-1592861956120-e524fc739696?w=600&h=400&fit=crop",
+    available: true,
+    spotsLeft: 4,
+    nextAvailable: null,
+    timeSlots: ["18:00", "19:30", "21:00"],
+    cyclingMinutes: 5,
+    vibes: ["Trendy", "Natural wine", "Sharing plates"],
+    bestTime: "Friday evening",
+    instagram: "@voltamsterdam",
+    website: "https://volt.nl",
+    maxDuration: 90,
+    description: "Modern bistronomy with creative sharing plates and an excellent natural wine list.",
+  },
+];
+
+export const mockEvents: Event[] = [
+  {
+    id: "1",
+    name: "Mom's 60th Birthday",
+    date: "2026-03-15",
+    restaurantId: "1",
+    photos: [],
+    notes: "She loved the garden setting",
+    liked: "Truffle pasta was incredible",
+    disliked: "Bit cold outside in the greenhouse",
+    ambience: "Magical, greenery everywhere",
+    personalRating: 5,
+    wouldVisitAgain: "yes",
+    isTradition: true,
+    emoji: "🎂",
+  },
+  {
+    id: "2",
+    name: "Anniversary Dinner",
+    date: "2025-02-14",
+    restaurantId: "3",
+    photos: [],
+    notes: "The view at sunset was unforgettable",
+    liked: "Everything — the tasting menu was perfect",
+    disliked: "",
+    ambience: "Elegant, romantic, quiet",
+    personalRating: 5,
+    wouldVisitAgain: "yes",
+    isTradition: true,
+    emoji: "🥂",
+  },
+  {
+    id: "3",
+    name: "Team Dinner",
+    date: "2026-01-20",
+    restaurantId: "2",
+    photos: [],
+    notes: "Great for a group of 8",
+    liked: "Roast chicken is legendary",
+    disliked: "Quite loud, hard to talk",
+    ambience: "Buzzy, energetic",
+    personalRating: 4,
+    wouldVisitAgain: "yes",
+    isTradition: false,
+    emoji: "👥",
+  },
+];
+
+export const cuisineOptions = [
+  "Dutch", "Indonesian", "Italian", "Japanese", "French",
+  "Surinamese", "Indian", "Mediterranean", "Turkish", "Chinese",
+  "Thai", "Mexican", "Korean", "Ethiopian", "Vegan",
+];
+
+export const vibeOptions = [
+  "Date night", "Group-friendly", "Casual", "Fine dining",
+  "Terrace", "Cozy", "Lively", "Family-friendly",
+  "View", "Garden", "Intimate", "Wine bar",
+];

@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-cream: #F5F0E8;
+  --color-cream-light: #FAFAF7;
+  --color-sage: #C5CFC0;
+  --color-sage-dark: #A3B29E;
+  --color-forest: #2D5F2D;
+  --color-forest-light: #3A7A3A;
+  --color-charcoal: #4A4A48;
+  --color-charcoal-dark: #2C2C2A;
+  --color-warm-beige: #D9CEBC;
+  --color-blush: #E8D0C8;
+  --color-terracotta: #C27A3E;
+  --color-burgundy: #5C2028;
+  --color-mustard: #D4A934;
+  --color-light-grey: #E8E6E2;
+  --color-background: #FAFAF7;
+  --color-foreground: #2C2C2A;
+}
+
+@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background-color: var(--color-cream-light);
+  color: var(--color-charcoal-dark);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar {
+  width: 0px;
+}
+
+html {
+  height: -webkit-fill-available;
+}
+
+body {
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+}
