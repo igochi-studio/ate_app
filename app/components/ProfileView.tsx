@@ -8,7 +8,11 @@ import {
   GlobeIcon,
   ExitIcon,
   GearIcon,
+  ChevronRightIcon,
+  CheckIcon,
 } from "@radix-ui/react-icons";
+
+const spring = { type: "spring" as const, stiffness: 380, damping: 30, mass: 0.8 };
 
 export default function ProfileView({
   favouriteCount,
@@ -19,80 +23,82 @@ export default function ProfileView({
 }) {
   return (
     <div className="h-full flex flex-col pt-[env(safe-area-inset-top)]">
-      <div className="px-4 pt-4 pb-2">
-        <h1 className="text-xl font-bold text-charcoal-dark">Profile</h1>
+      <div className="px-5 pt-5 pb-3">
+        <h1 className="text-[22px] font-normal text-charcoal-dark font-[family-name:var(--font-instrument)]">
+          Profile
+        </h1>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-24">
+      <div className="flex-1 overflow-y-auto px-5 pb-24">
         {/* Avatar + username */}
-        <div className="flex items-center gap-4 mt-2 mb-6">
-          <div className="w-16 h-16 rounded-full bg-sage/40 flex items-center justify-center">
-            <PersonIcon className="w-7 h-7 text-forest" />
+        <div className="flex items-center gap-4 mt-2 mb-7">
+          <div className="w-14 h-14 rounded-full bg-forest/[0.08] flex items-center justify-center">
+            <PersonIcon className="w-6 h-6 text-forest/60" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-charcoal-dark">@foodie_amsterdam</h2>
-            <p className="text-xs text-charcoal/40">Amsterdam, NL</p>
+            <h2 className="text-[17px] font-bold text-charcoal-dark tracking-tight">@foodie_amsterdam</h2>
+            <p className="text-[12px] text-charcoal/25 font-medium mt-0.5">Amsterdam, NL</p>
           </div>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          <div className="bg-white rounded-2xl p-4 text-center border border-light-grey/50">
-            <p className="text-2xl font-bold text-forest">{favouriteCount}</p>
-            <p className="text-[10px] text-charcoal/40 font-medium mt-1">Saved</p>
-          </div>
-          <div className="bg-white rounded-2xl p-4 text-center border border-light-grey/50">
-            <p className="text-2xl font-bold text-terracotta">{eventCount}</p>
-            <p className="text-[10px] text-charcoal/40 font-medium mt-1">Events</p>
-          </div>
-          <div className="bg-white rounded-2xl p-4 text-center border border-light-grey/50">
-            <p className="text-2xl font-bold text-mustard">2</p>
-            <p className="text-[10px] text-charcoal/40 font-medium mt-1">Traditions</p>
-          </div>
+        <div className="flex gap-3 mb-7">
+          {[
+            { value: favouriteCount, label: "Saved", color: "text-forest" },
+            { value: eventCount, label: "Events", color: "text-terracotta" },
+            { value: 2, label: "Traditions", color: "text-mustard" },
+          ].map((stat) => (
+            <div key={stat.label} className="flex-1 bg-charcoal/[0.02] rounded-2xl py-4 text-center">
+              <p className={`text-[22px] font-extrabold ${stat.color} tracking-tight`}>{stat.value}</p>
+              <p className="text-[10px] text-charcoal/25 font-semibold tracking-wide uppercase mt-0.5">{stat.label}</p>
+            </div>
+          ))}
         </div>
 
         {/* Settings */}
-        <div className="bg-white rounded-2xl border border-light-grey/50 overflow-hidden">
+        <div className="space-y-0.5">
           <SettingRow
-            icon={<CalendarIcon className="w-4.5 h-4.5" />}
+            icon={<CalendarIcon className="w-4 h-4" />}
             label="Google Calendar"
             detail="Connected"
             connected
           />
           <SettingRow
-            icon={<BellIcon className="w-4.5 h-4.5" />}
+            icon={<BellIcon className="w-4 h-4" />}
             label="Notifications"
             detail="Push + Email"
           />
           <SettingRow
-            icon={<GlobeIcon className="w-4.5 h-4.5" />}
+            icon={<GlobeIcon className="w-4 h-4" />}
             label="Default Location"
             detail="Amsterdam"
           />
           <SettingRow
-            icon={<GearIcon className="w-4.5 h-4.5" />}
+            icon={<GearIcon className="w-4 h-4" />}
             label="Language"
             detail="English"
-            last
           />
         </div>
 
         {/* Account */}
-        <div className="bg-white rounded-2xl border border-light-grey/50 overflow-hidden mt-4">
+        <div className="mt-6 space-y-0.5">
           <SettingRow
-            icon={<PersonIcon className="w-4.5 h-4.5" />}
+            icon={<PersonIcon className="w-4 h-4" />}
             label="Edit Username"
-            detail=""
           />
-          <button className="w-full flex items-center gap-3 px-4 py-3.5">
-            <div className="w-8 h-8 rounded-xl bg-burgundy/10 flex items-center justify-center">
-              <ExitIcon className="w-4.5 h-4.5 text-burgundy" />
+          <motion.button
+            whileTap={{ scale: 0.98 }}
+            transition={spring}
+            className="w-full flex items-center gap-3 px-1 py-3.5"
+          >
+            <div className="w-8 h-8 rounded-xl bg-burgundy/[0.06] flex items-center justify-center">
+              <ExitIcon className="w-4 h-4 text-burgundy/60" />
             </div>
-            <span className="text-sm font-medium text-burgundy">Sign Out</span>
-          </button>
+            <span className="text-[14px] font-medium text-burgundy/70">Sign Out</span>
+          </motion.button>
         </div>
 
-        <p className="text-center text-[10px] text-charcoal/20 mt-6">ate v1.0.0</p>
+        <p className="text-center text-[10px] text-charcoal/10 mt-8 font-medium tracking-wider">ate v1.0</p>
       </div>
     </div>
   );
@@ -103,28 +109,29 @@ function SettingRow({
   label,
   detail,
   connected,
-  last,
 }: {
   icon: React.ReactNode;
   label: string;
-  detail: string;
+  detail?: string;
   connected?: boolean;
-  last?: boolean;
 }) {
   return (
-    <button
-      className={`w-full flex items-center gap-3 px-4 py-3.5 ${
-        !last ? "border-b border-light-grey/30" : ""
-      }`}
+    <motion.button
+      whileTap={{ scale: 0.98 }}
+      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+      className="w-full flex items-center gap-3 px-1 py-3.5 border-b border-charcoal/[0.03]"
     >
-      <div className="w-8 h-8 rounded-xl bg-sage/20 flex items-center justify-center text-forest">
+      <div className="w-8 h-8 rounded-xl bg-charcoal/[0.03] flex items-center justify-center text-charcoal/30">
         {icon}
       </div>
-      <span className="text-sm font-medium text-charcoal-dark flex-1 text-left">{label}</span>
-      <span className={`text-xs ${connected ? "text-forest font-medium" : "text-charcoal/40"}`}>
-        {detail}
-        {connected && " ✓"}
-      </span>
-    </button>
+      <span className="text-[14px] font-medium text-charcoal-dark flex-1 text-left">{label}</span>
+      {detail && (
+        <span className="flex items-center gap-1 text-[12px] text-charcoal/25 font-medium">
+          {detail}
+          {connected && <CheckIcon className="w-3 h-3 text-forest" />}
+        </span>
+      )}
+      <ChevronRightIcon className="w-4 h-4 text-charcoal/12" />
+    </motion.button>
   );
 }

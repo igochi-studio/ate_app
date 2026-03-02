@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import {
-  GlobeIcon,
+  TargetIcon,
   MagnifyingGlassIcon,
   PlusCircledIcon,
   HeartIcon,
@@ -10,6 +10,8 @@ import {
 } from "@radix-ui/react-icons";
 
 type Tab = "radar" | "search" | "event" | "favourites" | "profile";
+
+const spring = { type: "spring" as const, stiffness: 500, damping: 32, mass: 0.8 };
 
 export default function TabBar({
   active,
@@ -19,44 +21,43 @@ export default function TabBar({
   onNavigate: (tab: Tab) => void;
 }) {
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
-    { id: "radar", label: "Radar", icon: <GlobeIcon className="w-5 h-5" /> },
-    { id: "search", label: "Search", icon: <MagnifyingGlassIcon className="w-5 h-5" /> },
-    { id: "event", label: "Event", icon: <PlusCircledIcon className="w-5 h-5" /> },
-    { id: "favourites", label: "Favs", icon: <HeartIcon className="w-5 h-5" /> },
-    { id: "profile", label: "Profile", icon: <PersonIcon className="w-5 h-5" /> },
+    { id: "radar", label: "Radar", icon: <TargetIcon className="w-[18px] h-[18px]" /> },
+    { id: "search", label: "Search", icon: <MagnifyingGlassIcon className="w-[18px] h-[18px]" /> },
+    { id: "event", label: "Events", icon: <PlusCircledIcon className="w-[18px] h-[18px]" /> },
+    { id: "favourites", label: "Saved", icon: <HeartIcon className="w-[18px] h-[18px]" /> },
+    { id: "profile", label: "You", icon: <PersonIcon className="w-[18px] h-[18px]" /> },
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-cream-light/90 backdrop-blur-xl border-t border-light-grey">
-      <div className="max-w-md mx-auto flex items-center justify-around px-2 pb-[env(safe-area-inset-bottom)] pt-2">
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-cream-light/85 backdrop-blur-2xl border-t border-charcoal/[0.04]">
+      <div className="max-w-md mx-auto flex items-center justify-around px-3 pb-[max(env(safe-area-inset-bottom),8px)] pt-2">
         {tabs.map((tab) => (
-          <button
+          <motion.button
             key={tab.id}
+            whileTap={{ scale: 0.85 }}
+            transition={spring}
             onClick={() => onNavigate(tab.id)}
-            className="relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors"
+            className="relative flex flex-col items-center gap-[3px] px-4 py-1"
           >
-            <div
-              className={`transition-colors duration-200 ${
-                active === tab.id ? "text-forest" : "text-charcoal/50"
-              }`}
+            <motion.div
+              animate={{
+                color: active === tab.id ? "#1A1A18" : "rgba(74,74,72,0.22)",
+              }}
+              transition={{ duration: 0.25 }}
             >
               {tab.icon}
-            </div>
-            <span
-              className={`text-[10px] font-medium transition-colors duration-200 ${
-                active === tab.id ? "text-forest" : "text-charcoal/50"
-              }`}
+            </motion.div>
+            <motion.span
+              animate={{
+                color: active === tab.id ? "#1A1A18" : "rgba(74,74,72,0.22)",
+                fontWeight: active === tab.id ? 700 : 500,
+              }}
+              transition={{ duration: 0.25 }}
+              className="text-[10px] tracking-wide"
             >
               {tab.label}
-            </span>
-            {active === tab.id && (
-              <motion.div
-                layoutId="tab-indicator"
-                className="absolute -top-0.5 left-1/2 -translate-x-1/2 w-5 h-0.5 bg-forest rounded-full"
-                transition={{ type: "spring", stiffness: 500, damping: 35 }}
-              />
-            )}
-          </button>
+            </motion.span>
+          </motion.button>
         ))}
       </div>
     </div>

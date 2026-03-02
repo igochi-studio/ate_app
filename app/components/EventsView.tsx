@@ -6,25 +6,70 @@ import {
   PlusIcon,
   Cross2Icon,
   CalendarIcon,
-  LoopIcon,
+  CounterClockwiseClockIcon,
   StarFilledIcon,
   StarIcon,
+  HeartIcon,
+  PersonIcon,
+  LightningBoltIcon,
+  SunIcon,
+  MoonIcon,
+  BookmarkIcon,
+  CheckCircledIcon,
+  CrossCircledIcon,
+  QuestionMarkCircledIcon,
 } from "@radix-ui/react-icons";
 import type { Event, Restaurant } from "../data/restaurants";
+
+const spring = { type: "spring" as const, stiffness: 380, damping: 30, mass: 0.8 };
+
+// Event type icons using Radix
+const eventIcons: Record<string, React.ReactNode> = {
+  birthday: <StarFilledIcon className="w-5 h-5" />,
+  anniversary: <HeartIcon className="w-5 h-5" />,
+  team: <PersonIcon className="w-5 h-5" />,
+  celebration: <LightningBoltIcon className="w-5 h-5" />,
+  date: <MoonIcon className="w-5 h-5" />,
+  casual: <SunIcon className="w-5 h-5" />,
+  tradition: <BookmarkIcon className="w-5 h-5" />,
+  other: <CalendarIcon className="w-5 h-5" />,
+};
+
+const eventTypeOptions = [
+  { id: "birthday", label: "Birthday" },
+  { id: "anniversary", label: "Anniversary" },
+  { id: "team", label: "Team" },
+  { id: "celebration", label: "Celebration" },
+  { id: "date", label: "Date night" },
+  { id: "casual", label: "Casual" },
+  { id: "tradition", label: "Tradition" },
+  { id: "other", label: "Other" },
+];
+
+// Map old emoji-based events to icon types
+function getEventType(emoji: string): string {
+  const map: Record<string, string> = {
+    "🎂": "birthday",
+    "🥂": "anniversary",
+    "👥": "team",
+    "🎉": "celebration",
+    "💕": "date",
+    "🌞": "casual",
+    "🎄": "celebration",
+    "🎓": "celebration",
+  };
+  return map[emoji] || "other";
+}
 
 function StarRating({ rating, onChange }: { rating: number; onChange?: (r: number) => void }) {
   return (
     <div className="flex gap-0.5">
       {[1, 2, 3, 4, 5].map((star) => (
-        <button
-          key={star}
-          onClick={() => onChange?.(star)}
-          className="p-0.5"
-        >
+        <button key={star} onClick={() => onChange?.(star)} className="p-0.5">
           {star <= rating ? (
-            <StarFilledIcon className="w-5 h-5 text-mustard" />
+            <StarFilledIcon className="w-4 h-4 text-terracotta" />
           ) : (
-            <StarIcon className="w-5 h-5 text-light-grey" />
+            <StarIcon className="w-4 h-4 text-charcoal/10" />
           )}
         </button>
       ))}
@@ -54,124 +99,115 @@ export default function EventsView({
     personalRating: 0,
     wouldVisitAgain: "maybe" as "yes" | "maybe" | "no",
     isTradition: false,
-    emoji: "🎉",
+    eventType: "other",
   });
 
   const upcoming = events.filter((e) => new Date(e.date) >= new Date());
   const past = events.filter((e) => new Date(e.date) < new Date());
 
-  const getRestaurant = (id: string | null) =>
-    restaurants.find((r) => r.id === id);
+  const getRestaurant = (id: string | null) => restaurants.find((r) => r.id === id);
 
   const handleSubmit = () => {
     onAddEvent({
       ...newEvent,
       id: String(Date.now()),
       photos: [],
+      emoji: newEvent.eventType, // repurpose field for type
     });
     setShowAddForm(false);
     setNewEvent({
-      name: "",
-      date: "",
-      restaurantId: "",
-      notes: "",
-      liked: "",
-      disliked: "",
-      ambience: "",
-      personalRating: 0,
-      wouldVisitAgain: "maybe",
-      isTradition: false,
-      emoji: "🎉",
+      name: "", date: "", restaurantId: "", notes: "",
+      liked: "", disliked: "", ambience: "", personalRating: 0,
+      wouldVisitAgain: "maybe", isTradition: false, eventType: "other",
     });
   };
 
-  const emojiOptions = ["🎂", "🥂", "👥", "🎉", "💕", "🎄", "🌞", "🎓"];
-
-  // Memory wall for a tradition event
+  // Event detail view
   if (selectedEvent) {
+    const eventType = getEventType(selectedEvent.emoji);
     return (
       <div className="h-full flex flex-col pt-[env(safe-area-inset-top)]">
-        <div className="px-4 pt-4 pb-2 flex items-center gap-3">
-          <button onClick={() => setSelectedEvent(null)} className="text-forest">
-            <Cross2Icon className="w-5 h-5" />
-          </button>
-          <div>
-            <h1 className="text-lg font-bold text-charcoal-dark">
-              {selectedEvent.emoji} {selectedEvent.name}
+        <div className="px-5 pt-5 pb-3 flex items-center gap-3">
+          <motion.button
+            whileTap={{ scale: 0.85 }}
+            transition={spring}
+            onClick={() => setSelectedEvent(null)}
+            className="w-8 h-8 rounded-full bg-charcoal/[0.04] flex items-center justify-center"
+          >
+            <Cross2Icon className="w-4 h-4 text-charcoal/40" />
+          </motion.button>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-[18px] font-normal text-charcoal-dark font-[family-name:var(--font-instrument)] truncate">
+              {selectedEvent.name}
             </h1>
             {selectedEvent.isTradition && (
-              <p className="text-xs text-terracotta font-medium flex items-center gap-1">
-                <LoopIcon className="w-3 h-3" /> Yearly tradition
+              <p className="text-[11px] text-terracotta font-semibold flex items-center gap-1 mt-0.5">
+                <CounterClockwiseClockIcon className="w-3 h-3" /> Yearly tradition
               </p>
             )}
           </div>
+          <div className="w-10 h-10 rounded-full bg-sage/20 flex items-center justify-center text-forest">
+            {eventIcons[eventType]}
+          </div>
         </div>
-        <div className="flex-1 overflow-y-auto px-4 pb-24">
-          <div className="mt-4 bg-white rounded-2xl p-4 border border-light-grey/50">
-            <div className="flex items-center gap-2 text-sm text-charcoal/50 mb-3">
+
+        <div className="flex-1 overflow-y-auto px-5 pb-24">
+          <div className="mt-3 space-y-4">
+            <div className="flex items-center gap-2 text-[13px] text-charcoal/40 font-medium">
               <CalendarIcon className="w-4 h-4" />
               {new Date(selectedEvent.date).toLocaleDateString("en-NL", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
+                year: "numeric", month: "long", day: "numeric",
               })}
             </div>
+
             {selectedEvent.restaurantId && (
-              <div className="mb-3">
-                <p className="text-xs font-semibold text-charcoal/40 uppercase tracking-wider mb-1">
-                  Restaurant
-                </p>
-                <p className="text-sm font-medium text-charcoal-dark">
+              <div>
+                <p className="text-[11px] font-bold text-charcoal/20 uppercase tracking-[0.08em] mb-1">Restaurant</p>
+                <p className="text-[14px] font-medium text-charcoal-dark font-[family-name:var(--font-instrument)]">
                   {getRestaurant(selectedEvent.restaurantId)?.name || "Unknown"}
                 </p>
               </div>
             )}
-            <div className="mb-3">
-              <StarRating rating={selectedEvent.personalRating} />
-            </div>
+
+            <StarRating rating={selectedEvent.personalRating} />
+
             {selectedEvent.liked && (
-              <div className="mb-3">
-                <p className="text-xs font-semibold text-charcoal/40 uppercase tracking-wider mb-1">
-                  Loved
-                </p>
-                <p className="text-sm text-charcoal/70">{selectedEvent.liked}</p>
+              <div>
+                <p className="text-[11px] font-bold text-charcoal/20 uppercase tracking-[0.08em] mb-1">Loved</p>
+                <p className="text-[13px] text-charcoal/50 leading-relaxed">{selectedEvent.liked}</p>
               </div>
             )}
             {selectedEvent.disliked && (
-              <div className="mb-3">
-                <p className="text-xs font-semibold text-charcoal/40 uppercase tracking-wider mb-1">
-                  Could improve
-                </p>
-                <p className="text-sm text-charcoal/70">{selectedEvent.disliked}</p>
+              <div>
+                <p className="text-[11px] font-bold text-charcoal/20 uppercase tracking-[0.08em] mb-1">Could improve</p>
+                <p className="text-[13px] text-charcoal/50 leading-relaxed">{selectedEvent.disliked}</p>
               </div>
             )}
             {selectedEvent.ambience && (
-              <div className="mb-3">
-                <p className="text-xs font-semibold text-charcoal/40 uppercase tracking-wider mb-1">
-                  Ambience
-                </p>
-                <p className="text-sm text-charcoal/70">{selectedEvent.ambience}</p>
+              <div>
+                <p className="text-[11px] font-bold text-charcoal/20 uppercase tracking-[0.08em] mb-1">Ambience</p>
+                <p className="text-[13px] text-charcoal/50 leading-relaxed">{selectedEvent.ambience}</p>
               </div>
             )}
             {selectedEvent.notes && (
-              <div className="mb-3">
-                <p className="text-xs font-semibold text-charcoal/40 uppercase tracking-wider mb-1">
-                  Notes
-                </p>
-                <p className="text-sm text-charcoal/70">{selectedEvent.notes}</p>
+              <div>
+                <p className="text-[11px] font-bold text-charcoal/20 uppercase tracking-[0.08em] mb-1">Notes</p>
+                <p className="text-[13px] text-charcoal/50 leading-relaxed">{selectedEvent.notes}</p>
               </div>
             )}
-            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-light-grey/50">
-              <span className="text-xs text-charcoal/40">Would visit again:</span>
-              <span
-                className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                  selectedEvent.wouldVisitAgain === "yes"
-                    ? "bg-forest/10 text-forest"
-                    : selectedEvent.wouldVisitAgain === "maybe"
-                    ? "bg-mustard/10 text-mustard"
-                    : "bg-burgundy/10 text-burgundy"
-                }`}
-              >
+
+            <div className="flex items-center gap-2.5 pt-2 border-t border-charcoal/[0.04]">
+              <span className="text-[11px] text-charcoal/25 font-medium">Visit again</span>
+              <span className={`flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full ${
+                selectedEvent.wouldVisitAgain === "yes"
+                  ? "bg-forest/[0.06] text-forest"
+                  : selectedEvent.wouldVisitAgain === "maybe"
+                  ? "bg-mustard/10 text-mustard"
+                  : "bg-burgundy/[0.06] text-burgundy"
+              }`}>
+                {selectedEvent.wouldVisitAgain === "yes" && <CheckCircledIcon className="w-3 h-3" />}
+                {selectedEvent.wouldVisitAgain === "maybe" && <QuestionMarkCircledIcon className="w-3 h-3" />}
+                {selectedEvent.wouldVisitAgain === "no" && <CrossCircledIcon className="w-3 h-3" />}
                 {selectedEvent.wouldVisitAgain}
               </span>
             </div>
@@ -183,160 +219,176 @@ export default function EventsView({
 
   return (
     <div className="h-full flex flex-col pt-[env(safe-area-inset-top)]">
-      <div className="px-4 pt-4 pb-2 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-charcoal-dark">Your Events</h1>
+      <div className="px-5 pt-5 pb-3 flex items-center justify-between">
+        <h1 className="text-[22px] font-normal text-charcoal-dark font-[family-name:var(--font-instrument)]">
+          Your Events
+        </h1>
         <motion.button
-          whileTap={{ scale: 0.95 }}
+          whileTap={{ scale: 0.94 }}
+          transition={spring}
           onClick={() => setShowAddForm(true)}
-          className="flex items-center gap-1.5 bg-forest text-white text-sm font-medium px-3.5 py-2 rounded-xl"
+          className="flex items-center gap-1.5 bg-charcoal-dark text-white text-[12px] font-semibold px-3.5 py-2 rounded-full tracking-wide"
         >
-          <PlusIcon className="w-4 h-4" />
-          New Event
+          <PlusIcon className="w-3.5 h-3.5" />
+          New
         </motion.button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-24">
+      <div className="flex-1 overflow-y-auto px-5 pb-24">
         {events.length === 0 && !showAddForm ? (
-          <div className="text-center py-16">
-            <p className="text-5xl mb-4">🍽️</p>
-            <p className="text-base font-medium text-charcoal/60">
+          <div className="text-center py-20">
+            <div className="w-14 h-14 rounded-full bg-charcoal/[0.03] flex items-center justify-center mx-auto mb-4">
+              <CalendarIcon className="w-6 h-6 text-charcoal/15" />
+            </div>
+            <p className="text-[15px] font-medium text-charcoal/40">
               Your first meal memory starts here
             </p>
-            <p className="text-sm text-charcoal/30 mt-1">
-              Tap &ldquo;New Event&rdquo; to log a meal
+            <p className="text-[12px] text-charcoal/20 mt-1">
+              Tap &ldquo;New&rdquo; to log a meal
             </p>
           </div>
         ) : (
           <>
-            {/* Add form */}
             <AnimatePresence>
               {showAddForm && (
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="bg-white rounded-2xl p-4 border border-light-grey/50 mb-4"
+                  initial={{ opacity: 0, y: 16, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -16, scale: 0.98 }}
+                  transition={{ ...spring, stiffness: 300 }}
+                  className="bg-white rounded-2xl p-5 mb-5 shadow-[0_2px_16px_rgba(0,0,0,0.04)]"
                 >
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-charcoal-dark">New Event</h3>
-                    <button onClick={() => setShowAddForm(false)}>
-                      <Cross2Icon className="w-4 h-4 text-charcoal/40" />
-                    </button>
+                  <div className="flex items-center justify-between mb-5">
+                    <h3 className="font-semibold text-[15px] text-charcoal-dark">New Event</h3>
+                    <motion.button whileTap={{ scale: 0.85 }} onClick={() => setShowAddForm(false)}>
+                      <Cross2Icon className="w-4 h-4 text-charcoal/25" />
+                    </motion.button>
                   </div>
 
-                  <div className="space-y-3">
-                    {/* Emoji picker */}
-                    <div className="flex gap-2">
-                      {emojiOptions.map((e) => (
-                        <button
-                          key={e}
-                          onClick={() => setNewEvent({ ...newEvent, emoji: e })}
-                          className={`text-xl w-9 h-9 rounded-xl flex items-center justify-center ${
-                            newEvent.emoji === e ? "bg-sage/30 ring-2 ring-forest/30" : "bg-cream"
-                          }`}
-                        >
-                          {e}
-                        </button>
-                      ))}
+                  <div className="space-y-4">
+                    {/* Event type picker */}
+                    <div>
+                      <p className="text-[11px] font-bold text-charcoal/20 uppercase tracking-[0.08em] mb-2">Type</p>
+                      <div className="flex flex-wrap gap-2">
+                        {eventTypeOptions.map((opt) => (
+                          <motion.button
+                            key={opt.id}
+                            whileTap={{ scale: 0.92 }}
+                            transition={spring}
+                            onClick={() => setNewEvent({ ...newEvent, eventType: opt.id })}
+                            className={`flex items-center gap-1.5 text-[11px] font-semibold px-3 py-2 rounded-full transition-all duration-200 ${
+                              newEvent.eventType === opt.id
+                                ? "bg-forest text-white"
+                                : "bg-charcoal/[0.03] text-charcoal/35"
+                            }`}
+                          >
+                            <span className="w-3.5 h-3.5">{eventIcons[opt.id]}</span>
+                            {opt.label}
+                          </motion.button>
+                        ))}
+                      </div>
                     </div>
 
                     <input
                       type="text"
-                      placeholder="Event name (e.g., Mom's Birthday)"
+                      placeholder="Event name"
                       value={newEvent.name}
                       onChange={(e) => setNewEvent({ ...newEvent, name: e.target.value })}
-                      className="w-full bg-cream-light rounded-xl px-3.5 py-3 text-sm border border-light-grey/50 focus:outline-none focus:border-forest/30"
+                      className="w-full bg-charcoal/[0.02] rounded-xl px-4 py-3 text-[13px] font-medium border-0 focus:outline-none focus:ring-2 focus:ring-forest/10 placeholder:text-charcoal/20"
                     />
                     <input
                       type="date"
                       value={newEvent.date}
                       onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
-                      className="w-full bg-cream-light rounded-xl px-3.5 py-3 text-sm border border-light-grey/50 focus:outline-none focus:border-forest/30"
+                      className="w-full bg-charcoal/[0.02] rounded-xl px-4 py-3 text-[13px] font-medium border-0 focus:outline-none focus:ring-2 focus:ring-forest/10"
                     />
                     <select
                       value={newEvent.restaurantId}
                       onChange={(e) => setNewEvent({ ...newEvent, restaurantId: e.target.value })}
-                      className="w-full bg-cream-light rounded-xl px-3.5 py-3 text-sm border border-light-grey/50 focus:outline-none focus:border-forest/30"
+                      className="w-full bg-charcoal/[0.02] rounded-xl px-4 py-3 text-[13px] font-medium border-0 focus:outline-none focus:ring-2 focus:ring-forest/10"
                     >
                       <option value="">Restaurant (optional)</option>
                       {restaurants.map((r) => (
-                        <option key={r.id} value={r.id}>
-                          {r.name}
-                        </option>
+                        <option key={r.id} value={r.id}>{r.name}</option>
                       ))}
                     </select>
                     <textarea
-                      placeholder="What did you like?"
+                      placeholder="What did you love?"
                       value={newEvent.liked}
                       onChange={(e) => setNewEvent({ ...newEvent, liked: e.target.value })}
-                      className="w-full bg-cream-light rounded-xl px-3.5 py-3 text-sm border border-light-grey/50 focus:outline-none focus:border-forest/30 resize-none h-16"
+                      className="w-full bg-charcoal/[0.02] rounded-xl px-4 py-3 text-[13px] font-medium border-0 focus:outline-none focus:ring-2 focus:ring-forest/10 resize-none h-16 placeholder:text-charcoal/20"
                     />
                     <textarea
                       placeholder="What could be better?"
                       value={newEvent.disliked}
                       onChange={(e) => setNewEvent({ ...newEvent, disliked: e.target.value })}
-                      className="w-full bg-cream-light rounded-xl px-3.5 py-3 text-sm border border-light-grey/50 focus:outline-none focus:border-forest/30 resize-none h-16"
+                      className="w-full bg-charcoal/[0.02] rounded-xl px-4 py-3 text-[13px] font-medium border-0 focus:outline-none focus:ring-2 focus:ring-forest/10 resize-none h-16 placeholder:text-charcoal/20"
                     />
-                    <textarea
-                      placeholder="Ambience notes..."
-                      value={newEvent.ambience}
-                      onChange={(e) => setNewEvent({ ...newEvent, ambience: e.target.value })}
-                      className="w-full bg-cream-light rounded-xl px-3.5 py-3 text-sm border border-light-grey/50 focus:outline-none focus:border-forest/30 resize-none h-16"
-                    />
+
                     <div>
-                      <p className="text-xs font-medium text-charcoal/40 mb-1">Your rating</p>
+                      <p className="text-[11px] font-bold text-charcoal/20 uppercase tracking-[0.08em] mb-1.5">Rating</p>
                       <StarRating
                         rating={newEvent.personalRating}
                         onChange={(r) => setNewEvent({ ...newEvent, personalRating: r })}
                       />
                     </div>
+
                     <div>
-                      <p className="text-xs font-medium text-charcoal/40 mb-1.5">Visit again?</p>
+                      <p className="text-[11px] font-bold text-charcoal/20 uppercase tracking-[0.08em] mb-2">Visit again?</p>
                       <div className="flex gap-2">
                         {(["yes", "maybe", "no"] as const).map((opt) => (
-                          <button
+                          <motion.button
                             key={opt}
+                            whileTap={{ scale: 0.92 }}
+                            transition={spring}
                             onClick={() => setNewEvent({ ...newEvent, wouldVisitAgain: opt })}
-                            className={`text-sm font-medium px-4 py-2 rounded-xl capitalize transition-colors ${
+                            className={`flex items-center gap-1 text-[12px] font-semibold px-4 py-2 rounded-full capitalize transition-all duration-200 ${
                               newEvent.wouldVisitAgain === opt
-                                ? opt === "yes"
-                                  ? "bg-forest text-white"
-                                  : opt === "maybe"
-                                  ? "bg-mustard text-white"
+                                ? opt === "yes" ? "bg-forest text-white"
+                                  : opt === "maybe" ? "bg-mustard text-white"
                                   : "bg-burgundy text-white"
-                                : "bg-cream text-charcoal/50 border border-light-grey/50"
+                                : "bg-charcoal/[0.03] text-charcoal/30"
                             }`}
                           >
+                            {opt === "yes" && <CheckCircledIcon className="w-3 h-3" />}
+                            {opt === "maybe" && <QuestionMarkCircledIcon className="w-3 h-3" />}
+                            {opt === "no" && <CrossCircledIcon className="w-3 h-3" />}
                             {opt}
-                          </button>
+                          </motion.button>
                         ))}
                       </div>
                     </div>
-                    <div className="flex items-center justify-between bg-blush/20 rounded-xl px-4 py-3">
+
+                    {/* Tradition toggle */}
+                    <div className="flex items-center justify-between bg-sage/10 rounded-xl px-4 py-3.5">
                       <div>
-                        <p className="text-sm font-medium text-charcoal-dark">Make it a tradition?</p>
-                        <p className="text-xs text-charcoal/40">
+                        <p className="text-[13px] font-semibold text-charcoal-dark">Make it a tradition?</p>
+                        <p className="text-[11px] text-charcoal/25 font-medium mt-0.5">
                           We&apos;ll remind you every year
                         </p>
                       </div>
-                      <button
+                      <motion.button
+                        whileTap={{ scale: 0.9 }}
+                        transition={spring}
                         onClick={() => setNewEvent({ ...newEvent, isTradition: !newEvent.isTradition })}
-                        className={`w-12 h-7 rounded-full transition-colors relative ${
-                          newEvent.isTradition ? "bg-forest" : "bg-light-grey"
+                        className={`w-[44px] h-[26px] rounded-full transition-colors duration-300 relative ${
+                          newEvent.isTradition ? "bg-forest" : "bg-charcoal/10"
                         }`}
                       >
                         <motion.div
-                          animate={{ x: newEvent.isTradition ? 22 : 2 }}
-                          transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                          className="absolute top-1 w-5 h-5 bg-white rounded-full shadow-sm"
+                          animate={{ x: newEvent.isTradition ? 20 : 2 }}
+                          transition={spring}
+                          className="absolute top-[3px] w-5 h-5 bg-white rounded-full shadow-sm"
                         />
-                      </button>
+                      </motion.button>
                     </div>
+
                     <motion.button
                       whileTap={{ scale: 0.98 }}
+                      transition={spring}
                       onClick={handleSubmit}
                       disabled={!newEvent.name || !newEvent.date}
-                      className="w-full bg-forest text-white font-semibold py-3.5 rounded-2xl text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="w-full bg-charcoal-dark text-white font-semibold py-3.5 rounded-2xl text-[14px] disabled:opacity-25"
                     >
                       Save Event
                     </motion.button>
@@ -347,79 +399,83 @@ export default function EventsView({
 
             {/* Upcoming */}
             {upcoming.length > 0 && (
-              <div className="mb-5">
-                <h3 className="text-xs font-semibold text-charcoal/40 uppercase tracking-wider mb-2">
+              <div className="mb-6">
+                <h3 className="text-[11px] font-bold text-charcoal/20 uppercase tracking-[0.08em] mb-3">
                   Upcoming
                 </h3>
-                {upcoming.map((event) => (
-                  <motion.button
-                    key={event.id}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setSelectedEvent(event)}
-                    className="w-full text-left bg-white rounded-2xl p-4 border border-light-grey/50 mb-2"
-                  >
-                    <div className="flex items-start gap-3">
-                      <span className="text-2xl">{event.emoji}</span>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-sm text-charcoal-dark">{event.name}</h4>
-                        <p className="text-xs text-charcoal/50 mt-0.5">
-                          {new Date(event.date).toLocaleDateString("en-NL", {
-                            month: "short",
-                            day: "numeric",
-                          })}
-                          {event.restaurantId &&
-                            ` · ${getRestaurant(event.restaurantId)?.name || ""}`}
-                        </p>
-                        {event.isTradition && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-terracotta bg-terracotta/10 px-2 py-0.5 rounded-full mt-1.5">
-                            <LoopIcon className="w-2.5 h-2.5" /> Tradition
-                          </span>
-                        )}
+                {upcoming.map((event, i) => {
+                  const eventType = getEventType(event.emoji);
+                  return (
+                    <motion.button
+                      key={event.id}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ ...spring, delay: i * 0.05 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setSelectedEvent(event)}
+                      className="w-full text-left flex items-center gap-3.5 py-3.5 border-b border-charcoal/[0.04] last:border-0"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-sage/20 flex items-center justify-center text-forest shrink-0">
+                        {eventIcons[eventType]}
                       </div>
-                    </div>
-                  </motion.button>
-                ))}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-[14px] text-charcoal-dark truncate">{event.name}</h4>
+                        <p className="text-[11px] text-charcoal/30 mt-0.5 font-medium">
+                          {new Date(event.date).toLocaleDateString("en-NL", { month: "short", day: "numeric" })}
+                          {event.restaurantId && ` · ${getRestaurant(event.restaurantId)?.name || ""}`}
+                        </p>
+                      </div>
+                      {event.isTradition && (
+                        <div className="flex items-center gap-1 text-[10px] font-semibold text-terracotta bg-terracotta/[0.06] px-2 py-1 rounded-full shrink-0">
+                          <CounterClockwiseClockIcon className="w-2.5 h-2.5" />
+                          Tradition
+                        </div>
+                      )}
+                    </motion.button>
+                  );
+                })}
               </div>
             )}
 
             {/* Past */}
             {past.length > 0 && (
               <div>
-                <h3 className="text-xs font-semibold text-charcoal/40 uppercase tracking-wider mb-2">
-                  Past Events
+                <h3 className="text-[11px] font-bold text-charcoal/20 uppercase tracking-[0.08em] mb-3">
+                  Past
                 </h3>
-                {past.map((event) => (
-                  <motion.button
-                    key={event.id}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setSelectedEvent(event)}
-                    className="w-full text-left bg-white rounded-2xl p-4 border border-light-grey/50 mb-2"
-                  >
-                    <div className="flex items-start gap-3">
-                      <span className="text-2xl">{event.emoji}</span>
+                {past.map((event, i) => {
+                  const eventType = getEventType(event.emoji);
+                  return (
+                    <motion.button
+                      key={event.id}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ ...spring, delay: i * 0.05 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setSelectedEvent(event)}
+                      className="w-full text-left flex items-center gap-3.5 py-3.5 border-b border-charcoal/[0.04] last:border-0"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-charcoal/[0.03] flex items-center justify-center text-charcoal/25 shrink-0">
+                        {eventIcons[eventType]}
+                      </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-sm text-charcoal-dark">{event.name}</h4>
-                        <p className="text-xs text-charcoal/50 mt-0.5">
-                          {new Date(event.date).toLocaleDateString("en-NL", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })}
-                          {event.restaurantId &&
-                            ` · ${getRestaurant(event.restaurantId)?.name || ""}`}
+                        <h4 className="font-semibold text-[14px] text-charcoal-dark truncate">{event.name}</h4>
+                        <p className="text-[11px] text-charcoal/25 mt-0.5 font-medium">
+                          {new Date(event.date).toLocaleDateString("en-NL", { month: "short", day: "numeric", year: "numeric" })}
+                          {event.restaurantId && ` · ${getRestaurant(event.restaurantId)?.name || ""}`}
                         </p>
-                        <div className="flex items-center gap-2 mt-1.5">
+                        <div className="mt-1.5 flex items-center gap-2">
                           <StarRating rating={event.personalRating} />
                           {event.isTradition && (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-terracotta bg-terracotta/10 px-2 py-0.5 rounded-full">
-                              <LoopIcon className="w-2.5 h-2.5" /> Tradition
-                            </span>
+                            <div className="flex items-center gap-1 text-[10px] font-semibold text-terracotta bg-terracotta/[0.06] px-2 py-1 rounded-full">
+                              <CounterClockwiseClockIcon className="w-2.5 h-2.5" />
+                            </div>
                           )}
                         </div>
                       </div>
-                    </div>
-                  </motion.button>
-                ))}
+                    </motion.button>
+                  );
+                })}
               </div>
             )}
           </>
