@@ -23,16 +23,31 @@ import type { Event, Restaurant } from "../data/restaurants";
 
 const spring = { type: "spring" as const, stiffness: 380, damping: 30, mass: 0.8 };
 
-// Event type icons using Radix
+// Event type icons using Radix — sized for inline use
+function EventIcon({ type, className = "w-[14px] h-[14px]" }: { type: string; className?: string }) {
+  const icons: Record<string, React.ReactNode> = {
+    birthday: <StarFilledIcon className={className} />,
+    anniversary: <HeartIcon className={className} />,
+    team: <PersonIcon className={className} />,
+    celebration: <LightningBoltIcon className={className} />,
+    date: <MoonIcon className={className} />,
+    casual: <SunIcon className={className} />,
+    tradition: <BookmarkIcon className={className} />,
+    other: <CalendarIcon className={className} />,
+  };
+  return <>{icons[type] || icons.other}</>;
+}
+
+// Keep the old map for backward compat in list views
 const eventIcons: Record<string, React.ReactNode> = {
-  birthday: <StarFilledIcon className="w-5 h-5" />,
-  anniversary: <HeartIcon className="w-5 h-5" />,
-  team: <PersonIcon className="w-5 h-5" />,
-  celebration: <LightningBoltIcon className="w-5 h-5" />,
-  date: <MoonIcon className="w-5 h-5" />,
-  casual: <SunIcon className="w-5 h-5" />,
-  tradition: <BookmarkIcon className="w-5 h-5" />,
-  other: <CalendarIcon className="w-5 h-5" />,
+  birthday: <StarFilledIcon className="w-[18px] h-[18px]" />,
+  anniversary: <HeartIcon className="w-[18px] h-[18px]" />,
+  team: <PersonIcon className="w-[18px] h-[18px]" />,
+  celebration: <LightningBoltIcon className="w-[18px] h-[18px]" />,
+  date: <MoonIcon className="w-[18px] h-[18px]" />,
+  casual: <SunIcon className="w-[18px] h-[18px]" />,
+  tradition: <BookmarkIcon className="w-[18px] h-[18px]" />,
+  other: <CalendarIcon className="w-[18px] h-[18px]" />,
 };
 
 const eventTypeOptions = [
@@ -268,21 +283,21 @@ export default function EventsView({
                   <div className="space-y-4">
                     {/* Event type picker */}
                     <div>
-                      <p className="text-[11px] font-bold text-charcoal/20 uppercase tracking-[0.08em] mb-2">Type</p>
-                      <div className="flex flex-wrap gap-2">
+                      <p className="text-[11px] font-bold text-charcoal/20 uppercase tracking-[0.08em] mb-2.5">Type</p>
+                      <div className="flex flex-wrap gap-[6px]">
                         {eventTypeOptions.map((opt) => (
                           <motion.button
                             key={opt.id}
-                            whileTap={{ scale: 0.92 }}
+                            whileTap={{ scale: 0.94 }}
                             transition={spring}
                             onClick={() => setNewEvent({ ...newEvent, eventType: opt.id })}
-                            className={`flex items-center gap-1.5 text-[11px] font-semibold px-3 py-2 rounded-full transition-all duration-200 ${
+                            className={`inline-flex items-center gap-[6px] text-[12px] font-semibold pl-2.5 pr-3 py-[7px] rounded-full transition-all duration-200 ${
                               newEvent.eventType === opt.id
-                                ? "bg-forest text-white"
-                                : "bg-charcoal/[0.03] text-charcoal/35"
+                                ? "bg-charcoal-dark text-white"
+                                : "bg-charcoal/[0.05] text-charcoal/45"
                             }`}
                           >
-                            <span className="w-3.5 h-3.5">{eventIcons[opt.id]}</span>
+                            <EventIcon type={opt.id} />
                             {opt.label}
                           </motion.button>
                         ))}
