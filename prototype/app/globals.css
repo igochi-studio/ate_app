@@ -1,22 +1,32 @@
+@import url('https://api.fontshare.com/v2/css?f[]=general-sans@200,300,400,500,600,700&display=swap');
 @import "tailwindcss";
 
 @theme inline {
   --color-cream: #F5F0E8;
-  --color-cream-light: #FAF8F4;
+  --color-cream-light: #FAFAF8;
   --color-sage: #C5CFC0;
   --color-sage-dark: #A3B29E;
   --color-forest: #2D5F2D;
   --color-forest-light: #3A7A3A;
   --color-charcoal: #4A4A48;
-  --color-charcoal-dark: #1A1A18;
+  --color-charcoal-dark: #0D0D0D;
   --color-warm-beige: #D9CEBC;
   --color-blush: #E8D0C8;
   --color-terracotta: #C27A3E;
   --color-burgundy: #5C2028;
   --color-mustard: #D4A934;
   --color-light-grey: #E8E6E2;
-  --color-background: #FAF8F4;
-  --color-foreground: #1A1A18;
+  --color-background: #FAFAF8;
+  --color-foreground: #0D0D0D;
+  --color-ate-red: #FF4438;
+  --color-ate-coral: #E87461;
+  --color-ate-lavender: #8B7BD6;
+  --color-ate-mustard: #E8B84D;
+  --color-ate-green: #00C853;
+  --color-ate-ink: #0D0D0D;
+  --color-ate-white: #FFFFFF;
+  --color-ate-grey: #F2F2F0;
+  --color-ate-muted: #9E9E9C;
 }
 
 * {
@@ -24,15 +34,24 @@
 }
 
 body {
-  background-color: var(--color-cream-light);
-  color: var(--color-charcoal-dark);
+  background-color: var(--color-ate-white);
+  color: var(--color-ate-ink);
   overflow-x: hidden;
+  font-family: 'General Sans', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 ::-webkit-scrollbar {
   width: 0px;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 html {
@@ -44,10 +63,28 @@ body {
   min-height: -webkit-fill-available;
 }
 
-/* Leaflet overrides for our design */
+/* Editorial heading utility — Stack Sans Headline for headlines */
+.font-editorial {
+  font-family: var(--font-stack), 'General Sans', system-ui, sans-serif;
+}
+
+/* Editorial thin rule */
+.editorial-rule {
+  height: 1px;
+  background: currentColor;
+  opacity: 0.08;
+}
+
+/* Editorial vertical accent line */
+.editorial-accent-line {
+  border-left: 2px solid #FF4438;
+  padding-left: 12px;
+}
+
+/* Leaflet overrides */
 .leaflet-container {
-  background: #EDE9E0 !important;
-  font-family: inherit !important;
+  background: #F0EDE6 !important;
+  font-family: 'General Sans', system-ui, sans-serif !important;
 }
 
 .leaflet-control-zoom {
@@ -59,15 +96,16 @@ body {
 }
 
 .leaflet-tile-pane {
-  filter: saturate(0.3) brightness(1.08) sepia(0.15);
+  filter: saturate(0) brightness(1.15) contrast(0.9) sepia(0.12);
 }
 
 /* Restaurant badge on map */
 .restaurant-badge {
-  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .restaurant-badge:hover {
-  transform: scale(1.12);
+  transform: scale(1.08) translateY(-2px);
   z-index: 1000 !important;
 }
 
@@ -80,4 +118,25 @@ body {
   opacity: 1;
   transform: translateY(0);
   transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Custom range slider */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 2px;
+  background: #E0E0DE;
+  border-radius: 2px;
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: #0D0D0D;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 3px solid white;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
 }

@@ -19,6 +19,8 @@ export interface Restaurant {
   website: string;
   maxDuration: number | null;
   description: string;
+  hasOffer: boolean;
+  offerText: string | null;
 }
 
 export interface Event {
@@ -48,7 +50,7 @@ export const mockRestaurants: Restaurant[] = [
     ratingSource: "Google",
     lat: 52.3535,
     lng: 4.9275,
-    photo: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&h=400&fit=crop",
+    photo: "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=600&h=400&fit=crop",
     available: true,
     spotsLeft: 2,
     nextAvailable: null,
@@ -60,6 +62,8 @@ export const mockRestaurants: Restaurant[] = [
     website: "https://restaurantdekas.com",
     maxDuration: 120,
     description: "Set in a former greenhouse, De Kas serves a daily-changing menu using ingredients from its own garden.",
+    hasOffer: true,
+    offerText: "15% off lunch menu this week",
   },
   {
     id: "2",
@@ -70,7 +74,7 @@ export const mockRestaurants: Restaurant[] = [
     ratingSource: "Google",
     lat: 52.3612,
     lng: 4.9167,
-    photo: "https://images.unsplash.com/photo-1550966871-3ed3cdb51f3a?w=600&h=400&fit=crop",
+    photo: "https://images.unsplash.com/photo-1537047902294-62a40c20a6ae?w=600&h=400&fit=crop",
     available: true,
     spotsLeft: 5,
     nextAvailable: null,
@@ -82,6 +86,8 @@ export const mockRestaurants: Restaurant[] = [
     website: "https://rijsel.com",
     maxDuration: 90,
     description: "Known for their legendary roast chicken and buzzy atmosphere in a former mechanics workshop.",
+    hasOffer: false,
+    offerText: null,
   },
   {
     id: "3",
@@ -104,6 +110,8 @@ export const mockRestaurants: Restaurant[] = [
     website: "https://cielbleurestaurant.nl",
     maxDuration: null,
     description: "Two Michelin-starred restaurant on the 23rd floor of the Okura Hotel with panoramic views of Amsterdam.",
+    hasOffer: false,
+    offerText: null,
   },
   {
     id: "4",
@@ -126,6 +134,8 @@ export const mockRestaurants: Restaurant[] = [
     website: "https://mamamakan.nl",
     maxDuration: 90,
     description: "Authentic Indonesian home cooking in the heart of the Jordaan. Famous for their rijsttafel.",
+    hasOffer: true,
+    offerText: "Free rijsttafel upgrade for groups of 4+",
   },
   {
     id: "5",
@@ -136,7 +146,7 @@ export const mockRestaurants: Restaurant[] = [
     ratingSource: "Google",
     lat: 52.3580,
     lng: 4.8760,
-    photo: "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=600&h=400&fit=crop",
+    photo: "https://images.unsplash.com/photo-1544025162-d76694265947?w=600&h=400&fit=crop",
     available: false,
     spotsLeft: null,
     nextAvailable: "Saturday 20:00",
@@ -148,6 +158,8 @@ export const mockRestaurants: Restaurant[] = [
     website: "https://moshik.nl",
     maxDuration: null,
     description: "Two Michelin-starred tasting menu experience by Chef Moshik Roth.",
+    hasOffer: false,
+    offerText: null,
   },
   {
     id: "6",
@@ -158,7 +170,7 @@ export const mockRestaurants: Restaurant[] = [
     ratingSource: "Google",
     lat: 52.3700,
     lng: 4.8830,
-    photo: "https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?w=600&h=400&fit=crop",
+    photo: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&h=400&fit=crop",
     available: true,
     spotsLeft: 8,
     nextAvailable: null,
@@ -170,6 +182,8 @@ export const mockRestaurants: Restaurant[] = [
     website: "https://barparry.nl",
     maxDuration: null,
     description: "Laid-back Mediterranean wine bar in the Jordaan with a lovely terrace.",
+    hasOffer: true,
+    offerText: "Happy hour wines 50% off before 18:00",
   },
   {
     id: "7",
@@ -192,6 +206,8 @@ export const mockRestaurants: Restaurant[] = [
     website: "https://spangmakandra.nl",
     maxDuration: null,
     description: "The best Surinamese food in Amsterdam. No-frills, incredible flavour.",
+    hasOffer: false,
+    offerText: null,
   },
   {
     id: "8",
@@ -202,7 +218,7 @@ export const mockRestaurants: Restaurant[] = [
     ratingSource: "Google",
     lat: 52.3650,
     lng: 4.9010,
-    photo: "https://images.unsplash.com/photo-1600891964599-f94d51f5bde3?w=600&h=400&fit=crop",
+    photo: "https://images.unsplash.com/photo-1559329007-40df8a9345d8?w=600&h=400&fit=crop",
     available: true,
     spotsLeft: 1,
     nextAvailable: null,
@@ -214,6 +230,8 @@ export const mockRestaurants: Restaurant[] = [
     website: "https://kaagmanenkortekaas.nl",
     maxDuration: 120,
     description: "Intimate neighbourhood restaurant with a daily-changing 4-course menu.",
+    hasOffer: true,
+    offerText: "Complimentary wine pairing on Tuesdays",
   },
   {
     id: "9",
@@ -224,7 +242,7 @@ export const mockRestaurants: Restaurant[] = [
     ratingSource: "Google",
     lat: 52.3730,
     lng: 4.8790,
-    photo: "https://images.unsplash.com/photo-1579027989536-b7b1f875659b?w=600&h=400&fit=crop",
+    photo: "https://images.unsplash.com/photo-1498654896293-37aacf113fd9?w=600&h=400&fit=crop",
     available: false,
     spotsLeft: null,
     nextAvailable: "Thursday 19:00",
@@ -236,6 +254,8 @@ export const mockRestaurants: Restaurant[] = [
     website: "https://toscanini.nl",
     maxDuration: null,
     description: "Amsterdam's most beloved Italian restaurant. Authentic, generous, packed every night.",
+    hasOffer: false,
+    offerText: null,
   },
   {
     id: "10",
@@ -246,7 +266,7 @@ export const mockRestaurants: Restaurant[] = [
     ratingSource: "Google",
     lat: 52.3660,
     lng: 4.8960,
-    photo: "https://images.unsplash.com/photo-1592861956120-e524fc739696?w=600&h=400&fit=crop",
+    photo: "https://images.unsplash.com/photo-1424847651672-bf20a4b0982b?w=600&h=400&fit=crop",
     available: true,
     spotsLeft: 4,
     nextAvailable: null,
@@ -258,6 +278,8 @@ export const mockRestaurants: Restaurant[] = [
     website: "https://volt.nl",
     maxDuration: 90,
     description: "Modern bistronomy with creative sharing plates and an excellent natural wine list.",
+    hasOffer: true,
+    offerText: "3-course menu for 35 on weeknights",
   },
 ];
 
