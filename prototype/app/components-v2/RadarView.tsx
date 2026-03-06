@@ -9,8 +9,13 @@ import {
   MixerHorizontalIcon,
   ChevronDownIcon,
   ChevronUpIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   LightningBoltIcon,
   StarFilledIcon,
+  CheckIcon,
+  CalendarIcon,
+  ClockIcon,
 } from "@radix-ui/react-icons";
 import type { Restaurant } from "../data/restaurants";
 import { cuisineOptions, vibeOptions } from "../data/restaurants";
@@ -33,12 +38,198 @@ function FilterChip({ active, onClick, icon, children }: {
   );
 }
 
+/* ─── Custom Sort Picker ─── */
+const SORT_OPTIONS: { value: SortMode; label: string }[] = [
+  { value: "relevant", label: "Relevant" },
+  { value: "distance", label: "Nearest" },
+  { value: "rating", label: "Top rated" },
+  { value: "name", label: "A-Z" },
+];
+
+function SortPicker({ value, onChange }: { value: SortMode; onChange: (v: SortMode) => void }) {
+  const [open, setOpen] = useState(false);
+  const current = SORT_OPTIONS.find((o) => o.value === value)!;
+
+  return (
+    <div className="relative">
+      <motion.button whileTap={{ scale: 0.92 }} onClick={() => setOpen(!open)}
+        className="flex items-center gap-1 text-[11px] font-editorial font-bold text-ate-ink bg-ate-grey rounded-full px-3 py-1.5 uppercase tracking-[0.05em]">
+        {current.label}
+        <ChevronDownIcon className="w-3 h-3 text-ate-muted" />
+      </motion.button>
+      <AnimatePresence>
+        {open && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+            <motion.div
+              initial={{ opacity: 0, y: -4, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -4, scale: 0.95 }}
+              transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
+              className="absolute right-0 top-[calc(100%+6px)] z-50 bg-white rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-ate-ink/[0.05] overflow-hidden min-w-[140px]"
+            >
+              {SORT_OPTIONS.map((opt) => (
+                <button key={opt.value}
+                  onClick={() => { onChange(opt.value); setOpen(false); }}
+                  className={`w-full flex items-center justify-between gap-3 px-4 py-2.5 text-[12px] font-semibold transition-colors ${
+                    value === opt.value ? "text-ate-ink bg-ate-grey/60" : "text-ate-muted hover:bg-ate-grey/30"
+                  }`}>
+                  <span className="uppercase tracking-[0.05em]">{opt.label}</span>
+                  {value === opt.value && <CheckIcon className="w-3.5 h-3.5 text-ate-ink" />}
+                </button>
+              ))}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/* ─── Custom Date Picker ─── */
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const SHORT_MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const DAY_LABELS = ["Su","Mo","Tu","We","Th","Fr","Sa"];
+
+function DatePicker({ value, onChange, onClose }: { value: string; onChange: (d: string) => void; onClose: () => void }) {
+  const today = new Date();
+  const selected = value ? new Date(value + "T00:00:00") : null;
+  const [viewYear, setViewYear] = useState(selected?.getFullYear() ?? today.getFullYear());
+  const [viewMonth, setViewMonth] = useState(selected?.getMonth() ?? today.getMonth());
+
+  const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const cells: (number | null)[] = [];
+  for (let i = 0; i < firstDay; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+  const prevMonth = () => {
+    if (viewMonth === 0) { setViewMonth(11); setViewYear(viewYear - 1); }
+    else setViewMonth(viewMonth - 1);
+  };
+  const nextMonth = () => {
+    if (viewMonth === 11) { setViewMonth(0); setViewYear(viewYear + 1); }
+    else setViewMonth(viewMonth + 1);
+  };
+  const pick = (day: number) => {
+    const m = String(viewMonth + 1).padStart(2, "0");
+    const d = String(day).padStart(2, "0");
+    onChange(`${viewYear}-${m}-${d}`);
+    onClose();
+  };
+  const isSelected = (day: number) =>
+    selected && selected.getFullYear() === viewYear && selected.getMonth() === viewMonth && selected.getDate() === day;
+  const isToday = (day: number) =>
+    today.getFullYear() === viewYear && today.getMonth() === viewMonth && today.getDate() === day;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 6, scale: 0.96 }}
+      transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+      className="bg-white rounded-2xl p-4 shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-ate-ink/[0.05]"
+    >
+      <div className="flex items-center justify-between mb-3">
+        <motion.button whileTap={{ scale: 0.85 }} onClick={prevMonth} className="w-7 h-7 rounded-full bg-ate-grey flex items-center justify-center">
+          <ChevronLeftIcon className="w-3.5 h-3.5 text-ate-ink/50" />
+        </motion.button>
+        <span className="text-[13px] font-editorial font-bold text-ate-ink">{MONTHS[viewMonth]} {viewYear}</span>
+        <motion.button whileTap={{ scale: 0.85 }} onClick={nextMonth} className="w-7 h-7 rounded-full bg-ate-grey flex items-center justify-center">
+          <ChevronRightIcon className="w-3.5 h-3.5 text-ate-ink/50" />
+        </motion.button>
+      </div>
+      <div className="grid grid-cols-7 gap-0 mb-1">
+        {DAY_LABELS.map((d) => (
+          <div key={d} className="text-center text-[9px] font-bold text-ate-muted uppercase tracking-wider py-1">{d}</div>
+        ))}
+      </div>
+      <div className="grid grid-cols-7 gap-0">
+        {cells.map((day, i) => (
+          <div key={i} className="flex items-center justify-center">
+            {day ? (
+              <motion.button whileTap={{ scale: 0.85 }} onClick={() => pick(day)}
+                className={`w-8 h-8 rounded-full text-[12px] font-semibold flex items-center justify-center transition-colors ${
+                  isSelected(day) ? "bg-ate-ink text-white"
+                    : isToday(day) ? "bg-ate-red/10 text-ate-red font-bold"
+                    : "text-ate-ink/50 hover:bg-ate-grey"
+                }`}>{day}</motion.button>
+            ) : <div className="w-8 h-8" />}
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
+/* ─── Custom Time Picker ─── */
+function TimePicker({ value, onChange, onClose }: { value: string; onChange: (t: string) => void; onClose: () => void }) {
+  const [h, m] = value.split(":").map(Number);
+  const [hour, setHour] = useState(h);
+  const [minute, setMinute] = useState(Math.floor(m / 15) * 15);
+
+  const hours = Array.from({ length: 24 }, (_, i) => i);
+  const minutes = [0, 15, 30, 45];
+
+  const confirm = () => {
+    onChange(`${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`);
+    onClose();
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 6, scale: 0.96 }}
+      transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+      className="bg-white rounded-2xl p-4 shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-ate-ink/[0.05]"
+    >
+      <p className="text-[9px] font-editorial font-bold text-ate-muted uppercase tracking-[0.15em] mb-3">Select time</p>
+      <div className="flex gap-3 mb-3">
+        {/* Hour wheel */}
+        <div className="flex-1">
+          <p className="text-[9px] font-bold text-ate-muted uppercase tracking-wider mb-1.5 text-center">Hour</p>
+          <div className="h-[120px] overflow-y-auto no-scrollbar rounded-xl bg-ate-grey/50">
+            {hours.map((hr) => (
+              <button key={hr} onClick={() => setHour(hr)}
+                className={`w-full py-1.5 text-center text-[13px] font-semibold transition-colors rounded-lg ${
+                  hour === hr ? "bg-ate-ink text-white" : "text-ate-ink/40 hover:bg-ate-grey"
+                }`}>
+                {String(hr).padStart(2, "0")}
+              </button>
+            ))}
+          </div>
+        </div>
+        {/* Minute wheel */}
+        <div className="flex-1">
+          <p className="text-[9px] font-bold text-ate-muted uppercase tracking-wider mb-1.5 text-center">Min</p>
+          <div className="rounded-xl bg-ate-grey/50">
+            {minutes.map((min) => (
+              <button key={min} onClick={() => setMinute(min)}
+                className={`w-full py-2 text-center text-[13px] font-semibold transition-colors rounded-lg ${
+                  minute === min ? "bg-ate-ink text-white" : "text-ate-ink/40 hover:bg-ate-grey"
+                }`}>
+                {String(min).padStart(2, "0")}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+      <motion.button whileTap={{ scale: 0.96 }} onClick={confirm}
+        className="w-full bg-ate-ink text-white text-[12px] font-bold py-2.5 rounded-xl">
+        Set {String(hour).padStart(2, "0")}:{String(minute).padStart(2, "0")}
+      </motion.button>
+    </motion.div>
+  );
+}
+
 type SortMode = "relevant" | "distance" | "rating" | "name";
 
 /* ─── Snap points (from bottom of screen) ─── */
-const SNAP_COLLAPSED = 72; // just tab bar
-const SNAP_PEEK = 220;     // header + 1 card visible
-const SNAP_EXPANDED_VH = 0.78; // 78% of viewport
+const SNAP_COLLAPSED = 72;
+const SNAP_PEEK = 220;
+const SNAP_EXPANDED_VH = 0.78;
 
 export default function RadarView({
   restaurants,
@@ -68,6 +259,8 @@ export default function RadarView({
   const [selectedVibes, setSelectedVibes] = useState<string[]>([]);
   const [distance, setDistance] = useState(10);
   const [sortMode, setSortMode] = useState<SortMode>("relevant");
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
 
   // Sheet drag state
   const sheetControls = useAnimation();
@@ -79,7 +272,6 @@ export default function RadarView({
   const toggleVibe = (v: string) =>
     setSelectedVibes((prev) => prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]);
 
-  // Base filter: everything except availability (used by map to show all with visual distinction)
   const baseFiltered = useMemo(() => {
     let result = restaurants;
     if (query) {
@@ -103,7 +295,6 @@ export default function RadarView({
     return result;
   }, [restaurants, query, showFavouritesOnly, showDealsOnly, minRating, favouriteIds, selectedCuisines, selectedVibes, distance]);
 
-  // List filter: also applies availability filter for the bottom sheet
   const filtered = useMemo(() => {
     if (!showAllRestaurants) return baseFiltered.filter((r) => r.available);
     return baseFiltered;
@@ -122,7 +313,6 @@ export default function RadarView({
   const availableCount = filtered.filter((r) => r.available).length;
   const activeFilterCount = selectedCuisines.length + selectedVibes.length + (showFavouritesOnly ? 1 : 0) + (distance < 10 ? 1 : 0);
 
-  /* ─── Sheet snap logic ─── */
   const getSnapY = useCallback((snap: "collapsed" | "peek" | "expanded") => {
     const vh = typeof window !== "undefined" ? window.innerHeight : 800;
     switch (snap) {
@@ -143,38 +333,35 @@ export default function RadarView({
   const handleDragEnd = useCallback((_: unknown, info: PanInfo) => {
     const velocity = info.velocity.y;
     const currentY = sheetY.get();
-    const vh = typeof window !== "undefined" ? window.innerHeight : 800;
 
-    // Fast flick: use velocity direction
     if (Math.abs(velocity) > 400) {
       if (velocity > 0) {
-        // Flicking down
         if (currentSnap.current === "expanded") snapTo("peek");
         else snapTo("collapsed");
       } else {
-        // Flicking up
         if (currentSnap.current === "collapsed") snapTo("peek");
         else snapTo("expanded");
       }
       return;
     }
 
-    // Slow drag: snap to nearest point
-    const peekY = getSnapY("peek");
-    const expandedY = getSnapY("expanded");
-    const collapsedY = getSnapY("collapsed");
-
     const distances = [
-      { snap: "collapsed" as const, d: Math.abs(currentY - collapsedY) },
-      { snap: "peek" as const, d: Math.abs(currentY - peekY) },
-      { snap: "expanded" as const, d: Math.abs(currentY - expandedY) },
+      { snap: "collapsed" as const, d: Math.abs(currentY - getSnapY("collapsed")) },
+      { snap: "peek" as const, d: Math.abs(currentY - getSnapY("peek")) },
+      { snap: "expanded" as const, d: Math.abs(currentY - getSnapY("expanded")) },
     ];
     distances.sort((a, b) => a.d - b.d);
     snapTo(distances[0].snap);
   }, [sheetY, getSnapY, snapTo]);
 
-  // Sheet border radius fades as it expands to full screen
   const sheetRadius = useTransform(sheetY, [getSnapY("expanded"), getSnapY("peek")], [12, 28]);
+
+  // Format helpers
+  const dateDisplay = (() => {
+    if (!date) return "Pick date";
+    const d = new Date(date + "T00:00:00");
+    return d.toLocaleDateString("en-NL", { day: "numeric", month: "short" });
+  })();
 
   return (
     <div className="h-full relative overflow-hidden bg-ate-white">
@@ -217,7 +404,7 @@ export default function RadarView({
                     {query || "Find a restaurant"}
                   </p>
                   <p className="text-[11px] text-ate-muted font-medium mt-0.5 tracking-wide">
-                    {location} · {new Date(date + "T00:00").toLocaleDateString("en-NL", { month: "short", day: "numeric" })} · {time} · {guests} guest{guests !== 1 ? "s" : ""}
+                    {location} · {dateDisplay} · {time} · {guests} guest{guests !== 1 ? "s" : ""}
                   </p>
                 </div>
                 {activeFilterCount > 0 && (
@@ -236,14 +423,13 @@ export default function RadarView({
               transition={{ ...spring, stiffness: 400 }}
               className="bg-white rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.15)] overflow-hidden"
             >
-              {/* Header */}
               <div className="flex items-center justify-between px-5 pt-4 pb-2">
                 <h2 className="font-editorial text-[20px] font-extrabold text-ate-ink tracking-[-0.02em]">
                   Find your table
                 </h2>
                 <motion.button
                   whileTap={{ scale: 0.85 }}
-                  onClick={() => setSearchOpen(false)}
+                  onClick={() => { setSearchOpen(false); setShowDatePicker(false); setShowTimePicker(false); }}
                   className="w-8 h-8 rounded-full bg-ate-grey flex items-center justify-center"
                 >
                   <Cross2Icon className="w-4 h-4 text-ate-ink" />
@@ -277,16 +463,41 @@ export default function RadarView({
                   <input type="text" value={location} onChange={(e) => setLocation(e.target.value)}
                     className="block w-full bg-transparent text-[13px] font-semibold text-ate-ink border-0 p-0 mt-0.5 focus:outline-none" />
                 </div>
-                <div className="bg-ate-grey rounded-xl px-3.5 py-2.5">
+
+                {/* Custom date field */}
+                <div className="bg-ate-grey rounded-xl px-3.5 py-2.5 relative">
                   <label className="text-[9px] font-editorial font-bold text-ate-muted uppercase tracking-[0.15em]">Date</label>
-                  <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
-                    className="block w-full bg-transparent text-[13px] font-semibold text-ate-ink border-0 p-0 mt-0.5 focus:outline-none" />
+                  <button onClick={() => { setShowDatePicker(!showDatePicker); setShowTimePicker(false); }}
+                    className="flex items-center gap-1.5 mt-0.5 w-full text-left">
+                    <CalendarIcon className="w-3 h-3 text-ate-muted" />
+                    <span className="text-[13px] font-semibold text-ate-ink">{dateDisplay}</span>
+                  </button>
+                  <AnimatePresence>
+                    {showDatePicker && (
+                      <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-50" style={{ width: "calc(200% + 10px)" }}>
+                        <DatePicker value={date} onChange={setDate} onClose={() => setShowDatePicker(false)} />
+                      </div>
+                    )}
+                  </AnimatePresence>
                 </div>
-                <div className="bg-ate-grey rounded-xl px-3.5 py-2.5">
+
+                {/* Custom time field */}
+                <div className="bg-ate-grey rounded-xl px-3.5 py-2.5 relative">
                   <label className="text-[9px] font-editorial font-bold text-ate-muted uppercase tracking-[0.15em]">Time</label>
-                  <input type="time" value={time} onChange={(e) => setTime(e.target.value)}
-                    className="block w-full bg-transparent text-[13px] font-semibold text-ate-ink border-0 p-0 mt-0.5 focus:outline-none" />
+                  <button onClick={() => { setShowTimePicker(!showTimePicker); setShowDatePicker(false); }}
+                    className="flex items-center gap-1.5 mt-0.5 w-full text-left">
+                    <ClockIcon className="w-3 h-3 text-ate-muted" />
+                    <span className="text-[13px] font-semibold text-ate-ink">{time}</span>
+                  </button>
+                  <AnimatePresence>
+                    {showTimePicker && (
+                      <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-50">
+                        <TimePicker value={time} onChange={setTime} onClose={() => setShowTimePicker(false)} />
+                      </div>
+                    )}
+                  </AnimatePresence>
                 </div>
+
                 <div className="bg-ate-grey rounded-xl px-3.5 py-2.5">
                   <label className="text-[9px] font-editorial font-bold text-ate-muted uppercase tracking-[0.15em]">Guests</label>
                   <div className="flex items-center gap-2 mt-0.5">
@@ -349,7 +560,8 @@ export default function RadarView({
               </AnimatePresence>
 
               <div className="px-5 pb-5 pt-1">
-                <motion.button whileTap={{ scale: 0.97 }} transition={spring} onClick={() => setSearchOpen(false)}
+                <motion.button whileTap={{ scale: 0.97 }} transition={spring}
+                  onClick={() => { setSearchOpen(false); setShowDatePicker(false); setShowTimePicker(false); }}
                   className="w-full bg-ate-red text-white font-editorial font-bold text-[14px] py-3.5 rounded-2xl tracking-[-0.01em] shadow-[0_4px_16px_rgba(255,68,56,0.3)]">
                   Search · {filtered.length} result{filtered.length !== 1 ? "s" : ""}
                 </motion.button>
@@ -358,7 +570,7 @@ export default function RadarView({
           )}
         </AnimatePresence>
 
-        {/* Zomato-style horizontal filter chips */}
+        {/* Horizontal filter chips */}
         {!searchOpen && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}
             className="flex gap-2 mt-3 overflow-x-auto no-scrollbar">
@@ -407,7 +619,6 @@ export default function RadarView({
           dragMomentum={false}
           onDragEnd={handleDragEnd}
         >
-          {/* Drag handle */}
           <div
             className="flex justify-center pt-2.5 pb-2 cursor-grab active:cursor-grabbing"
             onDoubleClick={() => snapTo(currentSnap.current === "expanded" ? "peek" : "expanded")}
@@ -415,7 +626,6 @@ export default function RadarView({
             <div className="w-9 h-[4px] bg-ate-ink/[0.12] rounded-full" />
           </div>
 
-          {/* Sheet header */}
           <div className="px-5 pb-3 flex items-end justify-between">
             <div className="flex items-baseline gap-2">
               <span className="font-editorial text-[36px] font-extrabold text-ate-ink leading-none tracking-[-0.03em]">
@@ -429,13 +639,7 @@ export default function RadarView({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <select value={sortMode} onChange={(e) => setSortMode(e.target.value as SortMode)}
-                className="text-[11px] font-editorial font-bold text-ate-ink bg-ate-grey rounded-full px-3 py-1.5 border-0 focus:outline-none appearance-none cursor-pointer uppercase tracking-[0.05em]">
-                <option value="relevant">Relevant</option>
-                <option value="distance">Nearest</option>
-                <option value="rating">Top rated</option>
-                <option value="name">A-Z</option>
-              </select>
+              <SortPicker value={sortMode} onChange={setSortMode} />
               <motion.button whileTap={{ scale: 0.85 }}
                 onClick={() => snapTo(currentSnap.current === "expanded" ? "peek" : "expanded")}
                 className="w-8 h-8 rounded-full bg-ate-grey flex items-center justify-center">
@@ -449,7 +653,6 @@ export default function RadarView({
             </div>
           </div>
 
-          {/* Thin editorial rule */}
           <div className="mx-5 h-[1px] bg-ate-ink/[0.06] mb-2" />
 
           <div className="px-4 overflow-y-auto pb-24" style={{ height: "calc(100vh - 120px)" }}>
