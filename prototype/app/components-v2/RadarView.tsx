@@ -188,7 +188,7 @@ export default function RadarView({
           }
         >
           <MapView
-            restaurants={baseFiltered}
+            restaurants={showAllRestaurants ? baseFiltered : filtered}
             favouriteIds={favouriteIds}
             showFavouritesOnly={showFavouritesOnly}
             onSelectRestaurant={onSelectRestaurant}
