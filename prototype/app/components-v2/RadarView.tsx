@@ -124,42 +124,36 @@ function DatePicker({ value, onChange, onClose }: { value: string; onChange: (d:
     today.getFullYear() === viewYear && today.getMonth() === viewMonth && today.getDate() === day;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 6, scale: 0.96 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 6, scale: 0.96 }}
-      transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-      className="bg-white rounded-2xl p-4 shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-ate-ink/[0.05]"
-    >
-      <div className="flex items-center justify-between mb-3">
-        <motion.button whileTap={{ scale: 0.85 }} onClick={prevMonth} className="w-7 h-7 rounded-full bg-ate-grey flex items-center justify-center">
-          <ChevronLeftIcon className="w-3.5 h-3.5 text-ate-ink/50" />
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <motion.button whileTap={{ scale: 0.85 }} onClick={prevMonth} className="w-8 h-8 rounded-full bg-ate-grey flex items-center justify-center">
+          <ChevronLeftIcon className="w-4 h-4 text-ate-ink/50" />
         </motion.button>
-        <span className="text-[13px] font-editorial font-bold text-ate-ink">{MONTHS[viewMonth]} {viewYear}</span>
-        <motion.button whileTap={{ scale: 0.85 }} onClick={nextMonth} className="w-7 h-7 rounded-full bg-ate-grey flex items-center justify-center">
-          <ChevronRightIcon className="w-3.5 h-3.5 text-ate-ink/50" />
+        <span className="text-[15px] font-editorial font-bold text-ate-ink">{MONTHS[viewMonth]} {viewYear}</span>
+        <motion.button whileTap={{ scale: 0.85 }} onClick={nextMonth} className="w-8 h-8 rounded-full bg-ate-grey flex items-center justify-center">
+          <ChevronRightIcon className="w-4 h-4 text-ate-ink/50" />
         </motion.button>
       </div>
       <div className="grid grid-cols-7 gap-0 mb-1">
         {DAY_LABELS.map((d) => (
-          <div key={d} className="text-center text-[9px] font-bold text-ate-muted uppercase tracking-wider py-1">{d}</div>
+          <div key={d} className="text-center text-[10px] font-bold text-ate-muted uppercase tracking-wider py-1.5">{d}</div>
         ))}
       </div>
-      <div className="grid grid-cols-7 gap-0">
+      <div className="grid grid-cols-7 gap-y-0.5">
         {cells.map((day, i) => (
           <div key={i} className="flex items-center justify-center">
             {day ? (
               <motion.button whileTap={{ scale: 0.85 }} onClick={() => pick(day)}
-                className={`w-8 h-8 rounded-full text-[12px] font-semibold flex items-center justify-center transition-colors ${
+                className={`w-10 h-10 rounded-full text-[14px] font-semibold flex items-center justify-center transition-colors ${
                   isSelected(day) ? "bg-ate-ink text-white"
                     : isToday(day) ? "bg-ate-red/10 text-ate-red font-bold"
-                    : "text-ate-ink/50 hover:bg-ate-grey"
+                    : "text-ate-ink/50 active:bg-ate-grey"
                 }`}>{day}</motion.button>
-            ) : <div className="w-8 h-8" />}
+            ) : <div className="w-10 h-10" />}
           </div>
         ))}
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -178,13 +172,7 @@ function TimePicker({ value, onChange, onClose }: { value: string; onChange: (t:
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 6, scale: 0.96 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 6, scale: 0.96 }}
-      transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-      className="bg-white rounded-2xl p-4 shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-ate-ink/[0.05]"
-    >
+    <div>
       <p className="text-[9px] font-editorial font-bold text-ate-muted uppercase tracking-[0.15em] mb-3">Select time</p>
       <div className="flex gap-3 mb-3">
         {/* Hour wheel */}
@@ -220,7 +208,7 @@ function TimePicker({ value, onChange, onClose }: { value: string; onChange: (t:
         className="w-full bg-ate-ink text-white text-[12px] font-bold py-2.5 rounded-xl">
         Set {String(hour).padStart(2, "0")}:{String(minute).padStart(2, "0")}
       </motion.button>
-    </motion.div>
+    </div>
   );
 }
 
@@ -464,38 +452,24 @@ export default function RadarView({
                     className="block w-full bg-transparent text-[13px] font-semibold text-ate-ink border-0 p-0 mt-0.5 focus:outline-none" />
                 </div>
 
-                {/* Custom date field */}
-                <div className="bg-ate-grey rounded-xl px-3.5 py-2.5 relative">
+                {/* Date field */}
+                <div className="bg-ate-grey rounded-xl px-3.5 py-2.5">
                   <label className="text-[9px] font-editorial font-bold text-ate-muted uppercase tracking-[0.15em]">Date</label>
                   <button onClick={() => { setShowDatePicker(!showDatePicker); setShowTimePicker(false); }}
                     className="flex items-center gap-1.5 mt-0.5 w-full text-left">
                     <CalendarIcon className="w-3 h-3 text-ate-muted" />
                     <span className="text-[13px] font-semibold text-ate-ink">{dateDisplay}</span>
                   </button>
-                  <AnimatePresence>
-                    {showDatePicker && (
-                      <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-50" style={{ width: "calc(200% + 10px)" }}>
-                        <DatePicker value={date} onChange={setDate} onClose={() => setShowDatePicker(false)} />
-                      </div>
-                    )}
-                  </AnimatePresence>
                 </div>
 
-                {/* Custom time field */}
-                <div className="bg-ate-grey rounded-xl px-3.5 py-2.5 relative">
+                {/* Time field */}
+                <div className="bg-ate-grey rounded-xl px-3.5 py-2.5">
                   <label className="text-[9px] font-editorial font-bold text-ate-muted uppercase tracking-[0.15em]">Time</label>
                   <button onClick={() => { setShowTimePicker(!showTimePicker); setShowDatePicker(false); }}
                     className="flex items-center gap-1.5 mt-0.5 w-full text-left">
                     <ClockIcon className="w-3 h-3 text-ate-muted" />
                     <span className="text-[13px] font-semibold text-ate-ink">{time}</span>
                   </button>
-                  <AnimatePresence>
-                    {showTimePicker && (
-                      <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-50">
-                        <TimePicker value={time} onChange={setTime} onClose={() => setShowTimePicker(false)} />
-                      </div>
-                    )}
-                  </AnimatePresence>
                 </div>
 
                 <div className="bg-ate-grey rounded-xl px-3.5 py-2.5">
@@ -595,6 +569,44 @@ export default function RadarView({
           </motion.div>
         )}
       </div>
+
+      {/* DATE PICKER MODAL */}
+      <AnimatePresence>
+        {showDatePicker && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setShowDatePicker(false)}
+              className="fixed inset-0 bg-ate-ink/20 backdrop-blur-[2px] z-[60]" />
+            <motion.div
+              initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+              transition={{ type: "spring", stiffness: 400, damping: 40 }}
+              className="fixed bottom-0 left-0 right-0 z-[61] bg-white rounded-t-[28px] px-5 pb-10 pt-3"
+            >
+              <div className="flex justify-center mb-3"><div className="w-9 h-[4px] bg-ate-ink/10 rounded-full" /></div>
+              <DatePicker value={date} onChange={setDate} onClose={() => setShowDatePicker(false)} />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* TIME PICKER MODAL */}
+      <AnimatePresence>
+        {showTimePicker && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setShowTimePicker(false)}
+              className="fixed inset-0 bg-ate-ink/20 backdrop-blur-[2px] z-[60]" />
+            <motion.div
+              initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+              transition={{ type: "spring", stiffness: 400, damping: 40 }}
+              className="fixed bottom-0 left-0 right-0 z-[61] bg-white rounded-t-[28px] px-5 pb-10 pt-3"
+            >
+              <div className="flex justify-center mb-3"><div className="w-9 h-[4px] bg-ate-ink/10 rounded-full" /></div>
+              <TimePicker value={time} onChange={setTime} onClose={() => setShowTimePicker(false)} />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* DRAGGABLE BOTTOM SHEET */}
       {!searchOpen && (
