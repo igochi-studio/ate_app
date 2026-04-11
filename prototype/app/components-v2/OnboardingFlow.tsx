@@ -114,7 +114,18 @@ export default function OnboardingFlow({ onComplete }: { onComplete: () => void 
               </button>
             </motion.div>
 
-            <p className="text-[12px] text-ate-muted/50 mt-8 font-medium">
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.7, duration: 0.4 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={onComplete}
+              className="mt-6 text-[14px] font-semibold text-ate-ink/40 py-3 px-6 rounded-2xl border border-ate-ink/[0.08] transition-colors active:bg-ate-grey"
+            >
+              Continue as guest
+            </motion.button>
+
+            <p className="text-[12px] text-ate-muted/50 mt-6 font-medium">
               Already have an account?{" "}
               <button onClick={() => setStep(1)} className="text-ate-red font-semibold">
                 Log in

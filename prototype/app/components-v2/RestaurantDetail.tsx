@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Cross2Icon,
@@ -13,6 +13,8 @@ import {
   StarFilledIcon,
   TimerIcon,
   LightningBoltIcon,
+  ChevronRightIcon,
+  ChevronLeftIcon,
 } from "@radix-ui/react-icons";
 import type { Restaurant } from "../data/restaurants";
 
@@ -25,6 +27,61 @@ function getRatingColor(rating: number): string {
   if (rating >= 4.0) return "bg-[#6BAD2E]";
   if (rating >= 3.5) return "bg-[#D4A017]";
   return "bg-ate-muted";
+}
+
+/* ---- Phone SVG icon ---- */
+function PhoneIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 15 15"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M4.73 1.08a.75.75 0 0 0-1.26-.2L2.2 2.15a2.25 2.25 0 0 0-.46 2.38A18.97 18.97 0 0 0 5.7 9.3a18.97 18.97 0 0 0 4.77 3.96 2.25 2.25 0 0 0 2.38-.46l1.27-1.27a.75.75 0 0 0-.2-1.26l-2.5-1a.75.75 0 0 0-.72.13l-1.09.87a.15.15 0 0 1-.17.01 14.5 14.5 0 0 1-3.9-3.9.15.15 0 0 1 .01-.17l.87-1.09a.75.75 0 0 0 .13-.72l-1-2.5Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+/* ---- Directions / map SVG icon ---- */
+function DirectionsIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 15 15"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M7.5 1a.5.5 0 0 1 .354.146l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708l6-6A.5.5 0 0 1 7.5 1ZM7 5.5a.5.5 0 0 1 .5-.5H9a1 1 0 0 1 1 1v2.5a.5.5 0 0 1-1 0V6H7.5a.5.5 0 0 1-.5-.5Z"
+        fill="currentColor"
+        fillRule="evenodd"
+        clipRule="evenodd"
+      />
+    </svg>
+  );
+}
+
+/* ---- Menu SVG icon ---- */
+function MenuIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 15 15"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M2 3.5a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1h-10a.5.5 0 0 1-.5-.5Zm0 4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1h-10a.5.5 0 0 1-.5-.5Zm.5 3.5a.5.5 0 0 0 0 1h10a.5.5 0 0 0 0-1h-10Z"
+        fill="currentColor"
+        fillRule="evenodd"
+        clipRule="evenodd"
+      />
+    </svg>
+  );
 }
 
 export default function RestaurantDetail({
@@ -40,6 +97,54 @@ export default function RestaurantDetail({
 }) {
   const [selectedGuests, setSelectedGuests] = useState(2);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+  const [activePhoto, setActivePhoto] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [notifyToast, setNotifyToast] = useState<string | null>(null);
+  const galleryRef = useRef<HTMLDivElement>(null);
+
+  const photos =
+    restaurant && restaurant.photos && restaurant.photos.length > 0
+      ? restaurant.photos
+      : restaurant
+      ? [restaurant.photo]
+      : [];
+
+  /* ---- Gallery scroll tracking ---- */
+  const handleGalleryScroll = useCallback(() => {
+    const el = galleryRef.current;
+    if (!el) return;
+    const index = Math.round(el.scrollLeft / el.clientWidth);
+    setActivePhoto(index);
+  }, []);
+
+  /* ---- Lightbox navigation ---- */
+  const lightboxPrev = useCallback(() => {
+    setLightboxIndex((i) => (i > 0 ? i - 1 : photos.length - 1));
+  }, [photos.length]);
+
+  const lightboxNext = useCallback(() => {
+    setLightboxIndex((i) => (i < photos.length - 1 ? i + 1 : 0));
+  }, [photos.length]);
+
+  /* ---- Lightbox keyboard nav ---- */
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") lightboxPrev();
+      else if (e.key === "ArrowRight") lightboxNext();
+      else if (e.key === "Escape") setLightboxOpen(false);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [lightboxOpen, lightboxPrev, lightboxNext]);
+
+  /* ---- Notify toast auto-dismiss ---- */
+  useEffect(() => {
+    if (!notifyToast) return;
+    const t = setTimeout(() => setNotifyToast(null), 2000);
+    return () => clearTimeout(t);
+  }, [notifyToast]);
 
   if (!restaurant) return null;
 
@@ -70,16 +175,46 @@ export default function RestaurantDetail({
           <div className="w-10 h-[3px] bg-ate-ink/10 rounded-full" />
         </div>
 
-        {/* ---- PHOTO SECTION ---- */}
+        {/* ---- PHOTO GALLERY ---- */}
         <div className="relative w-full overflow-hidden">
-          <img
-            src={restaurant.photo}
-            alt={restaurant.name}
-            className="w-full h-[220px] object-cover"
-          />
+          <div
+            ref={galleryRef}
+            onScroll={handleGalleryScroll}
+            onClick={() => {
+              setLightboxIndex(activePhoto);
+              setLightboxOpen(true);
+            }}
+            className="flex w-full overflow-x-auto snap-x snap-mandatory scrollbar-hide cursor-pointer"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
+            {photos.map((src, i) => (
+              <img
+                key={i}
+                src={src}
+                alt={`${restaurant.name} photo ${i + 1}`}
+                className="w-full h-[220px] object-cover flex-shrink-0 snap-center"
+              />
+            ))}
+          </div>
 
           {/* Gradient overlay for text readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent pointer-events-none" />
+
+          {/* Dot indicators */}
+          {photos.length > 1 && (
+            <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-1.5 pointer-events-none">
+              {photos.map((_, i) => (
+                <div
+                  key={i}
+                  className={`rounded-full transition-all duration-200 ${
+                    i === activePhoto
+                      ? "w-2 h-2 bg-white"
+                      : "w-1.5 h-1.5 bg-white/50"
+                  }`}
+                />
+              ))}
+            </div>
+          )}
 
           {/* Top-right: Close + Favourite */}
           <div className="absolute top-3 right-3 flex items-center gap-2">
@@ -109,19 +244,35 @@ export default function RestaurantDetail({
             </motion.button>
           </div>
 
-          {/* Bottom-left: Rating badge */}
-          <div
-            className={`absolute bottom-3 left-4 flex items-center gap-1.5 ${getRatingColor(
-              restaurant.rating
-            )} rounded-lg px-2.5 py-1.5`}
-          >
-            <StarFilledIcon className="w-3 h-3 text-white" />
-            <span className="font-editorial font-bold text-[13px] text-white leading-none">
-              {restaurant.rating}
-            </span>
-            <span className="text-[10px] text-white/70 font-medium leading-none">
-              {restaurant.ratingSource}
-            </span>
+          {/* Bottom-left: Rating badge + Michelin star */}
+          <div className="absolute bottom-3 left-4 flex items-center gap-2">
+            <div
+              className={`flex items-center gap-1.5 ${getRatingColor(
+                restaurant.rating
+              )} rounded-lg px-2.5 py-1.5`}
+            >
+              <StarFilledIcon className="w-3 h-3 text-white" />
+              <span className="font-editorial font-bold text-[13px] text-white leading-none">
+                {restaurant.rating}
+              </span>
+              <span className="text-[10px] text-white/70 font-medium leading-none">
+                {restaurant.ratingSource}
+              </span>
+            </div>
+
+            {restaurant.hasMichelinStar && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2, ...spring }}
+                className="flex items-center gap-1 bg-white/90 backdrop-blur-md rounded-lg px-2 py-1.5"
+              >
+                <span className="text-[12px] leading-none">⭐</span>
+                <span className="font-editorial font-bold text-[11px] text-ate-ink leading-none">
+                  Michelin
+                </span>
+              </motion.div>
+            )}
           </div>
         </div>
 
@@ -132,13 +283,23 @@ export default function RestaurantDetail({
             <h2 className="font-editorial text-[26px] font-extrabold text-ate-ink leading-tight tracking-[-0.02em]">
               {restaurant.name}
             </h2>
-            <p className="text-[12px] text-ate-muted mt-1.5 font-medium tracking-wide">
-              {restaurant.cuisine}
-              <span className="mx-1.5 text-ate-muted/25">/</span>
-              {restaurant.priceRange}
-              <span className="mx-1.5 text-ate-muted/25">/</span>
-              {restaurant.cyclingMinutes} min cycle
-            </p>
+            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+              <p className="text-[12px] text-ate-muted font-medium tracking-wide">
+                {restaurant.cuisine}
+                <span className="mx-1.5 text-ate-muted/25">/</span>
+                {restaurant.priceRange}
+                <span className="mx-1.5 text-ate-muted/25">/</span>
+                {restaurant.cyclingMinutes} min cycle
+              </p>
+
+              {/* Dog-friendly badge */}
+              {restaurant.dogFriendly && (
+                <span className="inline-flex items-center gap-1 bg-ate-grey text-ate-ink/50 text-[10px] font-semibold px-2 py-1 rounded-full">
+                  <span className="text-[11px] leading-none">🐕</span>
+                  Dog-friendly
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Offer banner */}
@@ -216,7 +377,7 @@ export default function RestaurantDetail({
                   </div>
                 </div>
 
-                {/* Time slot grid */}
+                {/* Time slot grid — available + unavailable */}
                 <div className="grid grid-cols-4 gap-2 mt-4">
                   {restaurant.timeSlots.map((time) => (
                     <motion.button
@@ -231,6 +392,20 @@ export default function RestaurantDetail({
                       }`}
                     >
                       {time}
+                    </motion.button>
+                  ))}
+
+                  {/* Unavailable slots with notify bell */}
+                  {restaurant.unavailableSlots.map((time) => (
+                    <motion.button
+                      key={`unavail-${time}`}
+                      whileTap={{ scale: 0.94 }}
+                      transition={spring}
+                      onClick={() => setNotifyToast(time)}
+                      className="relative text-[13px] font-semibold px-3 py-2.5 rounded-xl tabular-nums text-center bg-ate-ink/[0.06] text-ate-muted/60 cursor-pointer"
+                    >
+                      <span>{time}</span>
+                      <BellIcon className="absolute top-1 right-1.5 w-2.5 h-2.5 text-ate-muted/40" />
                     </motion.button>
                   ))}
                 </div>
@@ -302,7 +477,7 @@ export default function RestaurantDetail({
           </div>
 
           {/* ---- SOCIAL LINKS ---- */}
-          <div className="mt-5 flex items-center gap-2.5">
+          <div className="mt-5 flex items-center gap-2 flex-wrap">
             <a
               href="#"
               className="flex items-center gap-2 text-[11px] text-ate-muted font-medium bg-ate-grey rounded-xl px-3.5 py-2.5 transition-colors hover:bg-ate-ink/[0.06]"
@@ -318,6 +493,39 @@ export default function RestaurantDetail({
             >
               <ExternalLinkIcon className="w-3.5 h-3.5" />
               Website
+            </a>
+
+            {/* Phone link */}
+            <a
+              href={`tel:${restaurant.phone}`}
+              className="flex items-center gap-2 text-[11px] text-ate-muted font-medium bg-ate-grey rounded-xl px-3.5 py-2.5 transition-colors hover:bg-ate-ink/[0.06]"
+            >
+              <PhoneIcon className="w-3.5 h-3.5" />
+              Call
+            </a>
+
+            {/* Menu link */}
+            {restaurant.menuUrl && (
+              <a
+                href={restaurant.menuUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-[11px] text-ate-muted font-medium bg-ate-grey rounded-xl px-3.5 py-2.5 transition-colors hover:bg-ate-ink/[0.06]"
+              >
+                <MenuIcon className="w-3.5 h-3.5" />
+                View menu
+              </a>
+            )}
+
+            {/* Get directions */}
+            <a
+              href={`https://www.google.com/maps/dir/?api=1&destination=${restaurant.lat},${restaurant.lng}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-[11px] text-ate-muted font-medium bg-ate-grey rounded-xl px-3.5 py-2.5 transition-colors hover:bg-ate-ink/[0.06]"
+            >
+              <DirectionsIcon className="w-3.5 h-3.5" />
+              Get directions
             </a>
           </div>
 
@@ -335,10 +543,120 @@ export default function RestaurantDetail({
                 ? `Reserve ${selectedSlot} for ${selectedGuests}`
                 : "Book a table"
               : "View on their website"}
-            <ExternalLinkIcon className="w-4 h-4 opacity-60" />
+            {restaurant.available && !selectedSlot ? (
+              <ChevronRightIcon className="w-4 h-4 opacity-70" />
+            ) : (
+              <ExternalLinkIcon className="w-4 h-4 opacity-60" />
+            )}
           </motion.a>
         </div>
       </motion.div>
+
+      {/* ---- NOTIFY TOAST ---- */}
+      <AnimatePresence>
+        {notifyToast && (
+          <motion.div
+            key="notify-toast"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={spring}
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] bg-ate-ink text-white text-[13px] font-semibold px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2"
+          >
+            <BellIcon className="w-4 h-4 text-ate-mustard" />
+            We&apos;ll notify you when {notifyToast} opens up!
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ---- FULLSCREEN LIGHTBOX ---- */}
+      <AnimatePresence>
+        {lightboxOpen && (
+          <motion.div
+            key="lightbox"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[70] bg-black flex items-center justify-center"
+            onClick={() => setLightboxOpen(false)}
+          >
+            {/* Close button */}
+            <motion.button
+              whileTap={{ scale: 0.85 }}
+              transition={spring}
+              onClick={() => setLightboxOpen(false)}
+              className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center"
+            >
+              <Cross2Icon className="w-5 h-5 text-white" />
+            </motion.button>
+
+            {/* Photo counter */}
+            <div className="absolute top-5 left-1/2 -translate-x-1/2 text-white/60 text-[13px] font-medium tabular-nums">
+              {lightboxIndex + 1} / {photos.length}
+            </div>
+
+            {/* Nav arrows */}
+            {photos.length > 1 && (
+              <>
+                <motion.button
+                  whileTap={{ scale: 0.85 }}
+                  transition={spring}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    lightboxPrev();
+                  }}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center"
+                >
+                  <ChevronLeftIcon className="w-5 h-5 text-white" />
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.85 }}
+                  transition={spring}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    lightboxNext();
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center"
+                >
+                  <ChevronRightIcon className="w-5 h-5 text-white" />
+                </motion.button>
+              </>
+            )}
+
+            {/* Image */}
+            <AnimatePresence mode="wait">
+              <motion.img
+                key={lightboxIndex}
+                src={photos[lightboxIndex]}
+                alt={`${restaurant.name} photo ${lightboxIndex + 1}`}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className="max-w-full max-h-full object-contain px-4"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </AnimatePresence>
+
+            {/* Dot indicators */}
+            {photos.length > 1 && (
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2">
+                {photos.map((_, i) => (
+                  <div
+                    key={i}
+                    className={`rounded-full transition-all duration-200 ${
+                      i === lightboxIndex
+                        ? "w-2 h-2 bg-white"
+                        : "w-1.5 h-1.5 bg-white/40"
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </AnimatePresence>
   );
 }

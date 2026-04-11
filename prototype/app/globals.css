@@ -96,7 +96,7 @@ body {
 }
 
 .leaflet-tile-pane {
-  filter: saturate(0) brightness(1.15) contrast(0.9) sepia(0.12);
+  filter: brightness(1.05) contrast(0.95);
 }
 
 /* Restaurant badge on map */
@@ -120,23 +120,23 @@ body {
   transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Custom range slider */
+/* Custom range slider — bigger, more visible */
 input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
-  height: 2px;
+  height: 6px;
   background: #E0E0DE;
-  border-radius: 2px;
+  border-radius: 6px;
   outline: none;
 }
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 18px;
-  height: 18px;
+  width: 26px;
+  height: 26px;
   background: #0D0D0D;
   border-radius: 50%;
   cursor: pointer;
-  border: 3px solid white;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  border: 3.5px solid white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
 }

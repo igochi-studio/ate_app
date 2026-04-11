@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo, lazy, Suspense, useRef, useCallback } from "react";
-import { motion, AnimatePresence, useMotionValue, useTransform, useAnimation, PanInfo } from "framer-motion";
+import { useState, useMemo, lazy, Suspense, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   MagnifyingGlassIcon,
   HeartFilledIcon,
@@ -16,6 +16,7 @@ import {
   CheckIcon,
   CalendarIcon,
   ClockIcon,
+  CrossCircledIcon,
 } from "@radix-ui/react-icons";
 import type { Restaurant } from "../data/restaurants";
 import { cuisineOptions, vibeOptions } from "../data/restaurants";
@@ -25,12 +26,33 @@ const MapView = lazy(() => import("./MapView"));
 
 const spring = { type: "spring" as const, stiffness: 380, damping: 30, mass: 0.8 };
 
+/* ─── List Icon SVG ─── */
+function ListIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+      <line x1="3" y1="6" x2="21" y2="6" />
+      <line x1="3" y1="12" x2="21" y2="12" />
+      <line x1="3" y1="18" x2="21" y2="18" />
+    </svg>
+  );
+}
+
+/* ─── Location Pin Icon ─── */
+function LocationPinIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="10" r="3" />
+      <path d="M12 2C7.58 2 4 5.58 4 10c0 5.25 8 12 8 12s8-6.75 8-12c0-4.42-3.58-8-8-8z" />
+    </svg>
+  );
+}
+
 function FilterChip({ active, onClick, icon, children }: {
   active: boolean; onClick: () => void; icon?: React.ReactNode; children: React.ReactNode;
 }) {
   return (
     <motion.button whileTap={{ scale: 0.92 }} onClick={onClick}
-      className={`flex items-center gap-1.5 text-[12px] font-semibold px-4 py-2 rounded-full shadow-[0_2px_12px_rgba(0,0,0,0.06)] transition-all whitespace-nowrap shrink-0 ${
+      className={`flex items-center gap-1.5 text-[12px] font-semibold px-4 py-2.5 rounded-full shadow-[0_2px_12px_rgba(0,0,0,0.06)] transition-all whitespace-nowrap shrink-0 ${
         active ? "bg-ate-ink text-white" : "bg-white text-ate-ink border border-ate-ink/[0.08]"
       }`}>
       {icon}{children}
@@ -89,7 +111,6 @@ function SortPicker({ value, onChange }: { value: SortMode; onChange: (v: SortMo
 
 /* ─── Custom Date Picker ─── */
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-const SHORT_MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const DAY_LABELS = ["Su","Mo","Tu","We","Th","Fr","Sa"];
 
 function DatePicker({ value, onChange, onClose }: { value: string; onChange: (d: string) => void; onClose: () => void }) {
@@ -175,7 +196,6 @@ function TimePicker({ value, onChange, onClose }: { value: string; onChange: (t:
     <div>
       <p className="text-[9px] font-editorial font-bold text-ate-muted uppercase tracking-[0.15em] mb-3">Select time</p>
       <div className="flex gap-3 mb-3">
-        {/* Hour wheel */}
         <div className="flex-1">
           <p className="text-[9px] font-bold text-ate-muted uppercase tracking-wider mb-1.5 text-center">Hour</p>
           <div className="h-[120px] overflow-y-auto no-scrollbar rounded-xl bg-ate-grey/50">
@@ -189,7 +209,6 @@ function TimePicker({ value, onChange, onClose }: { value: string; onChange: (t:
             ))}
           </div>
         </div>
-        {/* Minute wheel */}
         <div className="flex-1">
           <p className="text-[9px] font-bold text-ate-muted uppercase tracking-wider mb-1.5 text-center">Min</p>
           <div className="rounded-xl bg-ate-grey/50">
@@ -214,10 +233,18 @@ function TimePicker({ value, onChange, onClose }: { value: string; onChange: (t:
 
 type SortMode = "relevant" | "distance" | "rating" | "name";
 
-/* ─── Snap points (from bottom of screen) ─── */
-const SNAP_COLLAPSED = 72;
-const SNAP_PEEK = 220;
-const SNAP_EXPANDED_VH = 0.78;
+/* ─── Location suggestions ─── */
+const LOCATION_SUGGESTIONS = [
+  { label: "Current location", icon: "gps" },
+  { label: "Amsterdam", icon: "pin" },
+  { label: "Amsterdam Centrum", icon: "pin" },
+  { label: "Amsterdam Zuid", icon: "pin" },
+  { label: "Amsterdam West", icon: "pin" },
+  { label: "Amsterdam Oost", icon: "pin" },
+  { label: "De Pijp", icon: "pin" },
+  { label: "Jordaan", icon: "pin" },
+  { label: "Oud-West", icon: "pin" },
+];
 
 export default function RadarView({
   restaurants,
@@ -231,8 +258,10 @@ export default function RadarView({
   onSelectRestaurant: (r: Restaurant) => void;
 }) {
   const [searchOpen, setSearchOpen] = useState(false);
+  const [listOpen, setListOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [location, setLocation] = useState("Amsterdam");
+  const [location, setLocation] = useState("Current location");
+  const [showPetFriendlyOnly, setShowPetFriendlyOnly] = useState(false);
   const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [time, setTime] = useState(() =>
     new Date().toLocaleTimeString("en-NL", { hour: "2-digit", minute: "2-digit", hour12: false })
@@ -241,6 +270,8 @@ export default function RadarView({
   const [showAllRestaurants, setShowAllRestaurants] = useState(false);
   const [showFavouritesOnly, setShowFavouritesOnly] = useState(false);
   const [showDealsOnly, setShowDealsOnly] = useState(false);
+  const [showMichelinOnly, setShowMichelinOnly] = useState(false);
+  const [showNewOnly, setShowNewOnly] = useState(false);
   const [minRating, setMinRating] = useState(0);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [selectedCuisines, setSelectedCuisines] = useState<string[]>([]);
@@ -249,11 +280,10 @@ export default function RadarView({
   const [sortMode, setSortMode] = useState<SortMode>("relevant");
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
-
-  // Sheet drag state
-  const sheetControls = useAnimation();
-  const sheetY = useMotionValue(0);
-  const currentSnap = useRef<"collapsed" | "peek" | "expanded">("peek");
+  const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
+  const [showRestaurantSuggestions, setShowRestaurantSuggestions] = useState(false);
+  const locationInputRef = useRef<HTMLInputElement>(null);
+  const queryInputRef = useRef<HTMLInputElement>(null);
 
   const toggleCuisine = (c: string) =>
     setSelectedCuisines((prev) => prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]);
@@ -270,6 +300,9 @@ export default function RadarView({
     }
     if (showFavouritesOnly) result = result.filter((r) => favouriteIds.includes(r.id));
     if (showDealsOnly) result = result.filter((r) => r.hasOffer);
+    if (showMichelinOnly) result = result.filter((r) => r.hasMichelinStar);
+    if (showNewOnly) result = result.filter((r) => r.isNew);
+    if (showPetFriendlyOnly) result = result.filter((r) => r.dogFriendly);
     if (minRating > 0) result = result.filter((r) => r.rating >= minRating);
     if (selectedCuisines.length > 0)
       result = result.filter((r) =>
@@ -281,7 +314,7 @@ export default function RadarView({
       );
     result = result.filter((r) => r.cyclingMinutes <= distance * 2);
     return result;
-  }, [restaurants, query, showFavouritesOnly, showDealsOnly, minRating, favouriteIds, selectedCuisines, selectedVibes, distance]);
+  }, [restaurants, query, showFavouritesOnly, showDealsOnly, showMichelinOnly, showNewOnly, showPetFriendlyOnly, minRating, favouriteIds, selectedCuisines, selectedVibes, distance]);
 
   const filtered = useMemo(() => {
     if (!showAllRestaurants) return baseFiltered.filter((r) => r.available);
@@ -299,50 +332,32 @@ export default function RadarView({
   }, [filtered, sortMode]);
 
   const availableCount = filtered.filter((r) => r.available).length;
-  const activeFilterCount = selectedCuisines.length + selectedVibes.length + (showFavouritesOnly ? 1 : 0) + (distance < 10 ? 1 : 0);
+  const activeFilterCount = selectedCuisines.length + selectedVibes.length + (showFavouritesOnly ? 1 : 0) + (distance < 10 ? 1 : 0) + (showMichelinOnly ? 1 : 0) + (showNewOnly ? 1 : 0);
 
-  const getSnapY = useCallback((snap: "collapsed" | "peek" | "expanded") => {
-    const vh = typeof window !== "undefined" ? window.innerHeight : 800;
-    switch (snap) {
-      case "collapsed": return vh - SNAP_COLLAPSED;
-      case "peek": return vh - SNAP_PEEK;
-      case "expanded": return vh * (1 - SNAP_EXPANDED_VH);
-    }
-  }, []);
+  // Restaurant name autocomplete
+  const restaurantSuggestions = useMemo(() => {
+    if (!query || query.length < 1) return [];
+    const q = query.toLowerCase();
+    return restaurants.filter((r) =>
+      r.name.toLowerCase().includes(q) || r.cuisine.toLowerCase().includes(q)
+    ).slice(0, 5);
+  }, [query, restaurants]);
 
-  const snapTo = useCallback((snap: "collapsed" | "peek" | "expanded") => {
-    currentSnap.current = snap;
-    sheetControls.start({
-      y: getSnapY(snap),
-      transition: { type: "spring", stiffness: 400, damping: 40, mass: 0.8 },
-    });
-  }, [sheetControls, getSnapY]);
+  // Location autocomplete
+  const locationSuggestions = useMemo(() => {
+    if (!location) return LOCATION_SUGGESTIONS;
+    const q = location.toLowerCase();
+    return LOCATION_SUGGESTIONS.filter((s) => s.label.toLowerCase().includes(q));
+  }, [location]);
 
-  const handleDragEnd = useCallback((_: unknown, info: PanInfo) => {
-    const velocity = info.velocity.y;
-    const currentY = sheetY.get();
-
-    if (Math.abs(velocity) > 400) {
-      if (velocity > 0) {
-        if (currentSnap.current === "expanded") snapTo("peek");
-        else snapTo("collapsed");
-      } else {
-        if (currentSnap.current === "collapsed") snapTo("peek");
-        else snapTo("expanded");
-      }
-      return;
-    }
-
-    const distances = [
-      { snap: "collapsed" as const, d: Math.abs(currentY - getSnapY("collapsed")) },
-      { snap: "peek" as const, d: Math.abs(currentY - getSnapY("peek")) },
-      { snap: "expanded" as const, d: Math.abs(currentY - getSnapY("expanded")) },
-    ];
-    distances.sort((a, b) => a.d - b.d);
-    snapTo(distances[0].snap);
-  }, [sheetY, getSnapY, snapTo]);
-
-  const sheetRadius = useTransform(sheetY, [getSnapY("expanded"), getSnapY("peek")], [12, 28]);
+  const handleSearch = () => {
+    setSearchOpen(false);
+    setShowDatePicker(false);
+    setShowTimePicker(false);
+    setShowLocationSuggestions(false);
+    setShowRestaurantSuggestions(false);
+    setListOpen(true);
+  };
 
   // Format helpers
   const dateDisplay = (() => {
@@ -371,158 +386,348 @@ export default function RadarView({
         </Suspense>
       </div>
 
-      {/* FLOATING SEARCH BAR */}
-      <div className="absolute top-0 left-0 right-0 z-30 pt-[max(env(safe-area-inset-top),12px)] px-4">
-        <AnimatePresence mode="wait">
-          {!searchOpen ? (
-            <motion.div
-              key="search-collapsed"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-            >
-              <button
-                onClick={() => setSearchOpen(true)}
-                className="w-full flex items-center gap-3 bg-white rounded-2xl px-5 py-3.5 shadow-[0_4px_24px_rgba(0,0,0,0.1)]"
+      {/* FLOATING SEARCH BAR — pill-shaped, white */}
+      {!listOpen && (
+        <div className="absolute top-0 left-0 right-0 z-30 pt-[max(env(safe-area-inset-top),12px)] px-4">
+          <AnimatePresence mode="wait">
+            {!searchOpen && (
+              <motion.div
+                key="search-collapsed"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
               >
-                <MagnifyingGlassIcon className="w-5 h-5 text-ate-ink" />
-                <div className="flex-1 text-left">
-                  <p className="text-[14px] font-editorial font-bold text-ate-ink tracking-[-0.01em]">
-                    {query || "Find a restaurant"}
-                  </p>
-                  <p className="text-[11px] text-ate-muted font-medium mt-0.5 tracking-wide">
-                    {location} · {dateDisplay} · {time} · {guests} guest{guests !== 1 ? "s" : ""}
-                  </p>
-                </div>
-                {activeFilterCount > 0 && (
-                  <div className="w-6 h-6 bg-ate-red text-white text-[11px] font-bold rounded-full flex items-center justify-center font-editorial">
-                    {activeFilterCount}
+                <button
+                  onClick={() => setSearchOpen(true)}
+                  className="w-full flex items-center gap-3 bg-white rounded-full px-5 py-3.5 shadow-[0_4px_24px_rgba(0,0,0,0.1)]"
+                >
+                  <MagnifyingGlassIcon className="w-5 h-5 text-ate-ink" />
+                  <div className="flex-1 text-left">
+                    <p className="text-[14px] font-editorial font-bold text-ate-ink tracking-[-0.01em]">
+                      {query || "Find a restaurant"}
+                    </p>
+                    <p className="text-[11px] text-ate-muted font-medium mt-0.5 tracking-wide">
+                      {location} · {dateDisplay} · {time} · {guests} guest{guests !== 1 ? "s" : ""}
+                    </p>
                   </div>
-                )}
-              </button>
+                  {activeFilterCount > 0 && (
+                    <div className="w-6 h-6 bg-ate-red text-white text-[11px] font-bold rounded-full flex items-center justify-center font-editorial">
+                      {activeFilterCount}
+                    </div>
+                  )}
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Horizontal filter chips */}
+          {!searchOpen && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}
+              className="flex gap-2 mt-2.5 overflow-x-auto no-scrollbar pb-1">
+              <FilterChip active={!showAllRestaurants} onClick={() => setShowAllRestaurants(!showAllRestaurants)}>
+                {showAllRestaurants ? "All" : "Open now"}
+              </FilterChip>
+              <FilterChip active={minRating >= 4} onClick={() => setMinRating(minRating >= 4 ? 0 : 4)}
+                icon={<StarFilledIcon className="w-2.5 h-2.5" />}>
+                Rating 4.0+
+              </FilterChip>
+              <FilterChip active={showMichelinOnly} onClick={() => setShowMichelinOnly(!showMichelinOnly)}>
+                ⭐ Michelin
+              </FilterChip>
+              <FilterChip active={showNewOnly} onClick={() => setShowNewOnly(!showNewOnly)}>
+                New
+              </FilterChip>
+              <FilterChip active={selectedCuisines.includes("Halal")} onClick={() => toggleCuisine("Halal")}>
+                Halal
+              </FilterChip>
+              <FilterChip active={showPetFriendlyOnly} onClick={() => setShowPetFriendlyOnly(!showPetFriendlyOnly)}>
+                Pet friendly
+              </FilterChip>
+              <FilterChip active={showDealsOnly} onClick={() => setShowDealsOnly(!showDealsOnly)}
+                icon={<LightningBoltIcon className="w-2.5 h-2.5" />}>
+                Offers
+              </FilterChip>
+              <FilterChip active={showFavouritesOnly} onClick={() => setShowFavouritesOnly(!showFavouritesOnly)}
+                icon={<HeartFilledIcon className="w-2.5 h-2.5" />}>
+                Saved
+              </FilterChip>
+              <FilterChip active={distance < 5} onClick={() => setDistance(distance < 5 ? 10 : 3)}>
+                Nearby
+              </FilterChip>
             </motion.div>
-          ) : (
-            <motion.div
-              key="search-expanded"
-              initial={{ opacity: 0, scale: 0.98, y: -5 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.98, y: -5 }}
-              transition={{ ...spring, stiffness: 400 }}
-              className="bg-white rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.15)] overflow-hidden"
-            >
-              <div className="flex items-center justify-between px-5 pt-4 pb-2">
-                <h2 className="font-editorial text-[20px] font-extrabold text-ate-ink tracking-[-0.02em]">
+          )}
+        </div>
+      )}
+
+      {/* FLOATING LIST BUTTON + COUNT — bottom of map */}
+      {!searchOpen && !listOpen && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, ...spring }}
+          className="absolute bottom-24 left-1/2 -translate-x-1/2 z-30"
+        >
+          <motion.button
+            whileTap={{ scale: 0.92 }}
+            transition={spring}
+            onClick={() => setListOpen(true)}
+            className="flex items-center gap-2.5 bg-white text-ate-ink px-5 py-3.5 rounded-full shadow-[0_4px_24px_rgba(0,0,0,0.12)]"
+          >
+            <ListIcon className="w-5 h-5" />
+            <span className="font-editorial font-bold text-[14px]">
+              {availableCount} {showAllRestaurants ? "restaurants" : "available"}
+            </span>
+          </motion.button>
+        </motion.div>
+      )}
+
+      {/* ═══════ FULL-SCREEN SEARCH OVERLAY ═══════ */}
+      <AnimatePresence>
+        {searchOpen && (
+          <motion.div
+            key="search-fullscreen"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ ...spring, stiffness: 400 }}
+            className="fixed inset-0 z-[55] bg-white overflow-y-auto"
+          >
+            {/* Header */}
+            <div className="sticky top-0 z-10 bg-white pt-[max(env(safe-area-inset-top),12px)]">
+              <div className="flex items-center justify-between px-5 pt-3 pb-3">
+                <h2 className="font-editorial text-[24px] font-extrabold text-ate-ink tracking-[-0.02em]">
                   Find your table
                 </h2>
                 <motion.button
                   whileTap={{ scale: 0.85 }}
-                  onClick={() => { setSearchOpen(false); setShowDatePicker(false); setShowTimePicker(false); }}
-                  className="w-8 h-8 rounded-full bg-ate-grey flex items-center justify-center"
+                  onClick={() => { setSearchOpen(false); setShowDatePicker(false); setShowTimePicker(false); setShowLocationSuggestions(false); setShowRestaurantSuggestions(false); }}
+                  className="w-9 h-9 rounded-full bg-ate-grey flex items-center justify-center"
                 >
-                  <Cross2Icon className="w-4 h-4 text-ate-ink" />
+                  <Cross2Icon className="w-4.5 h-4.5 text-ate-ink" />
                 </motion.button>
               </div>
+            </div>
 
-              {/* Search input */}
-              <div className="px-5 pb-3">
-                <div className="relative">
-                  <MagnifyingGlassIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ate-muted" />
-                  <input
-                    type="text"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Restaurant name or cuisine..."
-                    className="w-full bg-ate-grey rounded-xl pl-10 pr-10 py-3 text-[13px] font-medium border-0 focus:outline-none focus:ring-2 focus:ring-ate-ink/10 placeholder:text-ate-muted/50"
-                    autoFocus
-                  />
-                  {query && (
-                    <button onClick={() => setQuery("")} className="absolute right-3.5 top-1/2 -translate-y-1/2">
-                      <Cross2Icon className="w-3.5 h-3.5 text-ate-muted" />
-                    </button>
+            <div className="px-5 pb-40">
+              {/* Search input with autocomplete */}
+              <div className="relative mb-4">
+                <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-ate-muted" />
+                <input
+                  ref={queryInputRef}
+                  type="text"
+                  value={query}
+                  onChange={(e) => { setQuery(e.target.value); setShowRestaurantSuggestions(true); setShowLocationSuggestions(false); }}
+                  onFocus={() => { setShowRestaurantSuggestions(true); setShowLocationSuggestions(false); }}
+                  placeholder="Restaurant name or cuisine..."
+                  className="w-full bg-ate-grey rounded-2xl pl-12 pr-12 py-4 text-[15px] font-medium border-0 focus:outline-none focus:ring-2 focus:ring-ate-ink/10 placeholder:text-ate-muted/50"
+                  autoFocus
+                />
+                {query && (
+                  <button onClick={() => { setQuery(""); setShowRestaurantSuggestions(false); }} className="absolute right-4 top-1/2 -translate-y-1/2">
+                    <CrossCircledIcon className="w-4 h-4 text-ate-muted" />
+                  </button>
+                )}
+
+                {/* Restaurant autocomplete dropdown */}
+                <AnimatePresence>
+                  {showRestaurantSuggestions && restaurantSuggestions.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      className="absolute left-0 right-0 top-[calc(100%+4px)] z-20 bg-white rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-ate-ink/[0.05] overflow-hidden"
+                    >
+                      {restaurantSuggestions.map((r) => (
+                        <button
+                          key={r.id}
+                          onClick={() => { setQuery(r.name); setShowRestaurantSuggestions(false); }}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-ate-grey/50 transition-colors"
+                        >
+                          <img src={r.photo} alt="" className="w-10 h-10 rounded-lg object-cover" />
+                          <div>
+                            <p className="text-[13px] font-semibold text-ate-ink">{r.name}</p>
+                            <p className="text-[11px] text-ate-muted">{r.cuisine} · {r.priceRange}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </motion.div>
                   )}
-                </div>
+                </AnimatePresence>
               </div>
 
-              {/* Filter grid */}
-              <div className="px-5 pb-3 grid grid-cols-2 gap-2.5">
-                <div className="bg-ate-grey rounded-xl px-3.5 py-2.5">
-                  <label className="text-[9px] font-editorial font-bold text-ate-muted uppercase tracking-[0.15em]">Location</label>
-                  <input type="text" value={location} onChange={(e) => setLocation(e.target.value)}
-                    className="block w-full bg-transparent text-[13px] font-semibold text-ate-ink border-0 p-0 mt-0.5 focus:outline-none" />
+              {/* Filter grid — bigger */}
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                {/* Location with autocomplete */}
+                <div className="relative">
+                  <div className="bg-ate-grey rounded-2xl px-4 py-3.5">
+                    <label className="text-[10px] font-editorial font-bold text-ate-muted uppercase tracking-[0.15em]">Location</label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <LocationPinIcon className="w-4 h-4 text-ate-muted shrink-0" />
+                      <input
+                        ref={locationInputRef}
+                        type="text"
+                        value={location}
+                        onChange={(e) => { setLocation(e.target.value); setShowLocationSuggestions(true); setShowRestaurantSuggestions(false); }}
+                        onFocus={() => { setShowLocationSuggestions(true); setShowRestaurantSuggestions(false); }}
+                        className="block w-full bg-transparent text-[14px] font-semibold text-ate-ink border-0 p-0 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Location autocomplete dropdown */}
+                  <AnimatePresence>
+                    {showLocationSuggestions && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        className="absolute left-0 right-0 top-[calc(100%+4px)] z-20 bg-white rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-ate-ink/[0.05] overflow-hidden"
+                      >
+                        {locationSuggestions.map((s) => (
+                          <button
+                            key={s.label}
+                            onClick={() => { setLocation(s.label); setShowLocationSuggestions(false); }}
+                            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-ate-grey/50 transition-colors"
+                          >
+                            {s.icon === "gps" ? (
+                              <div className="w-8 h-8 rounded-full bg-ate-red/10 flex items-center justify-center">
+                                <svg className="w-4 h-4 text-ate-red" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <circle cx="12" cy="12" r="3" />
+                                  <path d="M12 2v4m0 12v4m10-10h-4M6 12H2" />
+                                </svg>
+                              </div>
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-ate-grey flex items-center justify-center">
+                                <LocationPinIcon className="w-4 h-4 text-ate-muted" />
+                              </div>
+                            )}
+                            <span className={`text-[13px] font-semibold ${s.icon === "gps" ? "text-ate-red" : "text-ate-ink"}`}>
+                              {s.label}
+                            </span>
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 {/* Date field */}
-                <div className="bg-ate-grey rounded-xl px-3.5 py-2.5">
-                  <label className="text-[9px] font-editorial font-bold text-ate-muted uppercase tracking-[0.15em]">Date</label>
-                  <button onClick={() => { setShowDatePicker(!showDatePicker); setShowTimePicker(false); }}
-                    className="flex items-center gap-1.5 mt-0.5 w-full text-left">
-                    <CalendarIcon className="w-3 h-3 text-ate-muted" />
-                    <span className="text-[13px] font-semibold text-ate-ink">{dateDisplay}</span>
+                <div className="bg-ate-grey rounded-2xl px-4 py-3.5">
+                  <label className="text-[10px] font-editorial font-bold text-ate-muted uppercase tracking-[0.15em]">Date</label>
+                  <button onClick={() => { setShowDatePicker(!showDatePicker); setShowTimePicker(false); setShowLocationSuggestions(false); setShowRestaurantSuggestions(false); }}
+                    className="flex items-center gap-2 mt-1 w-full text-left">
+                    <CalendarIcon className="w-4 h-4 text-ate-muted" />
+                    <span className="text-[14px] font-semibold text-ate-ink">{dateDisplay}</span>
                   </button>
                 </div>
 
                 {/* Time field */}
-                <div className="bg-ate-grey rounded-xl px-3.5 py-2.5">
-                  <label className="text-[9px] font-editorial font-bold text-ate-muted uppercase tracking-[0.15em]">Time</label>
-                  <button onClick={() => { setShowTimePicker(!showTimePicker); setShowDatePicker(false); }}
-                    className="flex items-center gap-1.5 mt-0.5 w-full text-left">
-                    <ClockIcon className="w-3 h-3 text-ate-muted" />
-                    <span className="text-[13px] font-semibold text-ate-ink">{time}</span>
+                <div className="bg-ate-grey rounded-2xl px-4 py-3.5">
+                  <label className="text-[10px] font-editorial font-bold text-ate-muted uppercase tracking-[0.15em]">Time</label>
+                  <button onClick={() => { setShowTimePicker(!showTimePicker); setShowDatePicker(false); setShowLocationSuggestions(false); setShowRestaurantSuggestions(false); }}
+                    className="flex items-center gap-2 mt-1 w-full text-left">
+                    <ClockIcon className="w-4 h-4 text-ate-muted" />
+                    <span className="text-[14px] font-semibold text-ate-ink">{time}</span>
                   </button>
                 </div>
 
-                <div className="bg-ate-grey rounded-xl px-3.5 py-2.5">
-                  <label className="text-[9px] font-editorial font-bold text-ate-muted uppercase tracking-[0.15em]">Guests</label>
-                  <div className="flex items-center gap-2 mt-0.5">
+                {/* Guests */}
+                <div className="bg-ate-grey rounded-2xl px-4 py-3.5">
+                  <label className="text-[10px] font-editorial font-bold text-ate-muted uppercase tracking-[0.15em]">Guests</label>
+                  <div className="flex items-center gap-3 mt-1">
                     <motion.button whileTap={{ scale: 0.8 }} onClick={() => setGuests(Math.max(1, guests - 1))}
-                      className="w-6 h-6 rounded-full bg-ate-ink text-white flex items-center justify-center text-[13px] font-bold">-</motion.button>
-                    <span className="text-[13px] font-semibold text-ate-ink min-w-[20px] text-center tabular-nums">{guests}</span>
+                      className="w-8 h-8 rounded-full bg-ate-ink text-white flex items-center justify-center text-[15px] font-bold">-</motion.button>
+                    <span className="text-[15px] font-bold text-ate-ink min-w-[24px] text-center tabular-nums">{guests}</span>
                     <motion.button whileTap={{ scale: 0.8 }} onClick={() => setGuests(Math.min(12, guests + 1))}
-                      className="w-6 h-6 rounded-full bg-ate-ink text-white flex items-center justify-center text-[13px] font-bold">+</motion.button>
+                      className="w-8 h-8 rounded-full bg-ate-ink text-white flex items-center justify-center text-[15px] font-bold">+</motion.button>
                   </div>
                 </div>
               </div>
 
-              {/* Advanced toggle */}
-              <div className="px-5 pb-2">
-                <button onClick={() => setShowAdvanced(!showAdvanced)}
-                  className="flex items-center gap-1.5 text-[11px] font-editorial font-bold text-ate-muted uppercase tracking-[0.1em]">
-                  <MixerHorizontalIcon className="w-3.5 h-3.5" />
-                  More filters
-                  {showAdvanced ? <ChevronUpIcon className="w-3 h-3" /> : <ChevronDownIcon className="w-3 h-3" />}
-                </button>
-              </div>
+              {/* Inline Date/Time pickers */}
+              <AnimatePresence>
+                {showDatePicker && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                    className="overflow-hidden mb-4"
+                  >
+                    <div className="bg-ate-grey/50 rounded-2xl p-4">
+                      <DatePicker value={date} onChange={setDate} onClose={() => setShowDatePicker(false)} />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <AnimatePresence>
+                {showTimePicker && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                    className="overflow-hidden mb-4"
+                  >
+                    <div className="bg-ate-grey/50 rounded-2xl p-4">
+                      <TimePicker value={time} onChange={setTime} onClose={() => setShowTimePicker(false)} />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Advanced filters toggle */}
+              <button onClick={() => { setShowAdvanced(!showAdvanced); setShowLocationSuggestions(false); setShowRestaurantSuggestions(false); }}
+                className="flex items-center gap-2 text-[12px] font-editorial font-bold text-ate-muted uppercase tracking-[0.1em] mb-3">
+                <MixerHorizontalIcon className="w-4 h-4" />
+                More filters
+                {showAdvanced ? <ChevronUpIcon className="w-3.5 h-3.5" /> : <ChevronDownIcon className="w-3.5 h-3.5" />}
+              </button>
 
               <AnimatePresence>
                 {showAdvanced && (
                   <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
                     className="overflow-hidden">
-                    <div className="px-5 pb-3 space-y-4">
+                    <div className="space-y-5 pb-4">
+                      {/* Distance slider — bigger */}
                       <div>
-                        <label className="text-[9px] font-editorial font-bold text-ate-muted uppercase tracking-[0.15em]">
+                        <label className="text-[10px] font-editorial font-bold text-ate-muted uppercase tracking-[0.15em]">
                           Distance — {distance} km
                         </label>
-                        <input type="range" min={1} max={10} value={distance} onChange={(e) => setDistance(Number(e.target.value))} className="w-full mt-2" />
+                        <input
+                          type="range"
+                          min={1}
+                          max={10}
+                          value={distance}
+                          onChange={(e) => setDistance(Number(e.target.value))}
+                          className="w-full mt-3 h-2 accent-ate-red"
+                          style={{ height: "8px" }}
+                        />
                       </div>
+
+                      {/* Cuisine — bigger chips */}
                       <div>
-                        <label className="text-[9px] font-editorial font-bold text-ate-muted uppercase tracking-[0.15em]">Cuisine</label>
-                        <div className="flex flex-wrap gap-1.5 mt-2">
-                          {cuisineOptions.slice(0, 10).map((c) => (
+                        <label className="text-[10px] font-editorial font-bold text-ate-muted uppercase tracking-[0.15em]">Cuisine</label>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {cuisineOptions.map((c) => (
                             <motion.button key={c} whileTap={{ scale: 0.92 }} onClick={() => toggleCuisine(c)}
-                              className={`text-[11px] font-semibold px-3 py-1.5 rounded-full transition-all ${
+                              className={`text-[12px] font-semibold px-4 py-2 rounded-full transition-all ${
                                 selectedCuisines.includes(c) ? "bg-ate-ink text-white" : "bg-ate-grey text-ate-muted"
                               }`}>{c}</motion.button>
                           ))}
                         </div>
                       </div>
+
+                      {/* Vibe — bigger chips */}
                       <div>
-                        <label className="text-[9px] font-editorial font-bold text-ate-muted uppercase tracking-[0.15em]">Vibe</label>
-                        <div className="flex flex-wrap gap-1.5 mt-2">
-                          {vibeOptions.slice(0, 8).map((v) => (
+                        <label className="text-[10px] font-editorial font-bold text-ate-muted uppercase tracking-[0.15em]">Vibe</label>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {vibeOptions.map((v) => (
                             <motion.button key={v} whileTap={{ scale: 0.92 }} onClick={() => toggleVibe(v)}
-                              className={`text-[11px] font-semibold px-3 py-1.5 rounded-full transition-all ${
+                              className={`text-[12px] font-semibold px-4 py-2 rounded-full transition-all ${
                                 selectedVibes.includes(v) ? "bg-ate-coral text-white" : "bg-ate-grey text-ate-muted"
                               }`}>{v}</motion.button>
                           ))}
@@ -532,47 +737,102 @@ export default function RadarView({
                   </motion.div>
                 )}
               </AnimatePresence>
+            </div>
 
-              <div className="px-5 pb-5 pt-1">
-                <motion.button whileTap={{ scale: 0.97 }} transition={spring}
-                  onClick={() => { setSearchOpen(false); setShowDatePicker(false); setShowTimePicker(false); }}
-                  className="w-full bg-ate-red text-white font-editorial font-bold text-[14px] py-3.5 rounded-2xl tracking-[-0.01em] shadow-[0_4px_16px_rgba(255,68,56,0.3)]">
-                  Search · {filtered.length} result{filtered.length !== 1 ? "s" : ""}
-                </motion.button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Horizontal filter chips */}
-        {!searchOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}
-            className="flex gap-2 mt-3 overflow-x-auto no-scrollbar">
-            <FilterChip active={!showAllRestaurants} onClick={() => setShowAllRestaurants(!showAllRestaurants)}>
-              {showAllRestaurants ? "All" : "Open now"}
-            </FilterChip>
-            <FilterChip active={minRating >= 4} onClick={() => setMinRating(minRating >= 4 ? 0 : 4)}
-              icon={<StarFilledIcon className="w-2.5 h-2.5" />}>
-              Rating 4.0+
-            </FilterChip>
-            <FilterChip active={showDealsOnly} onClick={() => setShowDealsOnly(!showDealsOnly)}
-              icon={<LightningBoltIcon className="w-2.5 h-2.5" />}>
-              Offers
-            </FilterChip>
-            <FilterChip active={showFavouritesOnly} onClick={() => setShowFavouritesOnly(!showFavouritesOnly)}
-              icon={<HeartFilledIcon className="w-2.5 h-2.5" />}>
-              Saved
-            </FilterChip>
-            <FilterChip active={distance < 5} onClick={() => setDistance(distance < 5 ? 10 : 3)}>
-              Nearby
-            </FilterChip>
+            {/* Sticky search button at bottom */}
+            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-ate-ink/[0.05] px-5 py-4 pb-[max(env(safe-area-inset-bottom),16px)] z-10">
+              <motion.button whileTap={{ scale: 0.97 }} transition={spring}
+                onClick={handleSearch}
+                className="w-full bg-ate-red text-white font-editorial font-bold text-[16px] py-4 rounded-2xl tracking-[-0.01em] shadow-[0_4px_16px_rgba(255,68,56,0.3)]">
+                Search · {filtered.length} result{filtered.length !== 1 ? "s" : ""}
+              </motion.button>
+            </div>
           </motion.div>
         )}
-      </div>
+      </AnimatePresence>
 
-      {/* DATE PICKER MODAL */}
+      {/* ═══════ FULL-SCREEN LIST VIEW ═══════ */}
       <AnimatePresence>
-        {showDatePicker && (
+        {listOpen && !searchOpen && (
+          <motion.div
+            key="list-fullscreen"
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", stiffness: 300, damping: 35, mass: 0.9 }}
+            className="fixed inset-0 z-40 bg-white"
+          >
+            {/* List header */}
+            <div className="sticky top-0 z-10 bg-white pt-[max(env(safe-area-inset-top),12px)]">
+              <div className="px-5 pt-3 pb-3 flex items-center justify-between">
+                <div className="flex items-baseline gap-2">
+                  <span className="font-editorial text-[36px] font-extrabold text-ate-ink leading-none tracking-[-0.03em]">
+                    {availableCount}
+                  </span>
+                  <p className="text-[12px] font-editorial font-bold text-ate-muted uppercase tracking-[0.1em]">
+                    {showAllRestaurants ? "Restaurants" : "Available"}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <SortPicker value={sortMode} onChange={setSortMode} />
+                  <motion.button whileTap={{ scale: 0.85 }}
+                    onClick={() => setListOpen(false)}
+                    className="w-9 h-9 rounded-full bg-ate-grey flex items-center justify-center">
+                    <Cross2Icon className="w-4 h-4 text-ate-ink" />
+                  </motion.button>
+                </div>
+              </div>
+
+              {/* Filter chips in list view */}
+              <div className="flex gap-2 px-5 pb-3 overflow-x-auto no-scrollbar">
+                <FilterChip active={!showAllRestaurants} onClick={() => setShowAllRestaurants(!showAllRestaurants)}>
+                  {showAllRestaurants ? "All" : "Open now"}
+                </FilterChip>
+                <FilterChip active={showMichelinOnly} onClick={() => setShowMichelinOnly(!showMichelinOnly)}>
+                  ⭐ Michelin
+                </FilterChip>
+                <FilterChip active={showNewOnly} onClick={() => setShowNewOnly(!showNewOnly)}>
+                  New
+                </FilterChip>
+                <FilterChip active={minRating >= 4} onClick={() => setMinRating(minRating >= 4 ? 0 : 4)}
+                  icon={<StarFilledIcon className="w-2.5 h-2.5" />}>
+                  4.0+
+                </FilterChip>
+                <FilterChip active={selectedCuisines.includes("Halal")} onClick={() => toggleCuisine("Halal")}>
+                  Halal
+                </FilterChip>
+                <FilterChip active={showPetFriendlyOnly} onClick={() => setShowPetFriendlyOnly(!showPetFriendlyOnly)}>
+                  Pet friendly
+                </FilterChip>
+              </div>
+
+              <div className="mx-5 h-[1px] bg-ate-ink/[0.06]" />
+            </div>
+
+            {/* Restaurant cards */}
+            <div className="px-4 pt-2 overflow-y-auto pb-24" style={{ height: "calc(100vh - 160px)" }}>
+              {sorted.length === 0 ? (
+                <div className="text-center py-16">
+                  <p className="text-[16px] font-editorial font-bold text-ate-ink/25">No restaurants found</p>
+                  <p className="text-[13px] text-ate-muted mt-1.5">Try adjusting your filters</p>
+                </div>
+              ) : (
+                sorted.map((r, i) => (
+                  <motion.div key={r.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+                    transition={{ ...spring, delay: i * 0.04 }}>
+                    <RestaurantCard restaurant={r} isFavourite={favouriteIds.includes(r.id)}
+                      onToggleFavourite={onToggleFavourite} onSelect={onSelectRestaurant} />
+                  </motion.div>
+                ))
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* DATE PICKER MODAL — only when NOT in full-screen search */}
+      <AnimatePresence>
+        {showDatePicker && !searchOpen && (
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setShowDatePicker(false)}
@@ -589,9 +849,9 @@ export default function RadarView({
         )}
       </AnimatePresence>
 
-      {/* TIME PICKER MODAL */}
+      {/* TIME PICKER MODAL — only when NOT in full-screen search */}
       <AnimatePresence>
-        {showTimePicker && (
+        {showTimePicker && !searchOpen && (
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setShowTimePicker(false)}
@@ -607,84 +867,6 @@ export default function RadarView({
           </>
         )}
       </AnimatePresence>
-
-      {/* DRAGGABLE BOTTOM SHEET */}
-      {!searchOpen && (
-        <motion.div
-          className="absolute left-0 right-0 z-20 bg-white shadow-[0_-4px_30px_rgba(0,0,0,0.12)] will-change-transform"
-          style={{
-            y: sheetY,
-            borderTopLeftRadius: sheetRadius,
-            borderTopRightRadius: sheetRadius,
-            height: "100vh",
-            top: 0,
-            touchAction: "none",
-          }}
-          initial={{ y: getSnapY("peek") }}
-          animate={sheetControls}
-          drag="y"
-          dragConstraints={{
-            top: getSnapY("expanded"),
-            bottom: getSnapY("collapsed"),
-          }}
-          dragElastic={0.1}
-          dragMomentum={false}
-          onDragEnd={handleDragEnd}
-        >
-          <div
-            className="flex justify-center pt-2.5 pb-2 cursor-grab active:cursor-grabbing"
-            onDoubleClick={() => snapTo(currentSnap.current === "expanded" ? "peek" : "expanded")}
-          >
-            <div className="w-9 h-[4px] bg-ate-ink/[0.12] rounded-full" />
-          </div>
-
-          <div className="px-5 pb-3 flex items-end justify-between">
-            <div className="flex items-baseline gap-2">
-              <span className="font-editorial text-[36px] font-extrabold text-ate-ink leading-none tracking-[-0.03em]">
-                {availableCount}
-              </span>
-              <div>
-                <p className="text-[12px] font-editorial font-bold text-ate-muted uppercase tracking-[0.1em]">
-                  {showAllRestaurants ? "Restaurants" : "Available"}
-                </p>
-                <p className="text-[10px] text-ate-muted/60 font-medium">{location}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <SortPicker value={sortMode} onChange={setSortMode} />
-              <motion.button whileTap={{ scale: 0.85 }}
-                onClick={() => snapTo(currentSnap.current === "expanded" ? "peek" : "expanded")}
-                className="w-8 h-8 rounded-full bg-ate-grey flex items-center justify-center">
-                <motion.div
-                  animate={{ rotate: currentSnap.current === "expanded" ? 180 : 0 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                >
-                  <ChevronUpIcon className="w-4 h-4 text-ate-ink" />
-                </motion.div>
-              </motion.button>
-            </div>
-          </div>
-
-          <div className="mx-5 h-[1px] bg-ate-ink/[0.06] mb-2" />
-
-          <div className="px-4 overflow-y-auto pb-24" style={{ height: "calc(100vh - 120px)" }}>
-            {sorted.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-[14px] font-editorial font-bold text-ate-ink/25">No restaurants found</p>
-                <p className="text-[12px] text-ate-muted mt-1">Try adjusting your filters</p>
-              </div>
-            ) : (
-              sorted.map((r, i) => (
-                <motion.div key={r.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-                  transition={{ ...spring, delay: i * 0.04 }}>
-                  <RestaurantCard restaurant={r} isFavourite={favouriteIds.includes(r.id)}
-                    onToggleFavourite={onToggleFavourite} onSelect={onSelectRestaurant} />
-                </motion.div>
-              ))
-            )}
-          </div>
-        </motion.div>
-      )}
     </div>
   );
 }

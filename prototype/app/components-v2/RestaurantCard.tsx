@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   HeartIcon,
@@ -32,27 +33,88 @@ export default function RestaurantCard({
   onSelect: (restaurant: Restaurant) => void;
 }) {
   const r = restaurant;
+  const photos = r.photos && r.photos.length > 0 ? r.photos : [r.photo];
+  const [activePhoto, setActivePhoto] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const swipedRef = useRef(false);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const index = Math.round(el.scrollLeft / el.clientWidth);
+    setActivePhoto(index);
+  }, []);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    swipedRef.current = false;
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    const dx = Math.abs(e.touches[0].clientX - touchStartRef.current.x);
+    const dy = Math.abs(e.touches[0].clientY - touchStartRef.current.y);
+    if (dx > 8 || dy > 8) {
+      swipedRef.current = true;
+    }
+  }, []);
+
+  const handleCardClick = useCallback(() => {
+    if (!swipedRef.current) {
+      onSelect(r);
+    }
+  }, [onSelect, r]);
 
   return (
     <motion.div
       whileTap={{ scale: 0.975 }}
       transition={spring}
-      onClick={() => onSelect(r)}
+      onClick={handleCardClick}
       className="w-full mb-4 group cursor-pointer"
       role="button"
       tabIndex={0}
     >
       <div className="rounded-2xl transition-shadow hover:shadow-md">
-        {/* Hero Photo */}
-        <div className="relative w-full h-[140px] rounded-xl overflow-hidden">
-          <img
-            src={r.photo}
-            alt={r.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
+        {/* Hero Photo Carousel */}
+        <div className="relative w-full h-[280px] overflow-hidden">
+          <div
+            ref={scrollRef}
+            onScroll={handleScroll}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            className="flex w-full h-full overflow-x-auto snap-x snap-mandatory no-scrollbar"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}
+          >
+            {photos.map((photo, i) => (
+              <img
+                key={i}
+                src={photo}
+                alt={`${r.name} ${i + 1}`}
+                className="w-full h-full object-cover flex-shrink-0 snap-center"
+                draggable={false}
+              />
+            ))}
+          </div>
+
+          {/* Dot indicators */}
+          {photos.length > 1 && (
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10">
+              {photos.map((_, i) => (
+                <span
+                  key={i}
+                  className={`block rounded-full transition-all duration-200 ${
+                    i === activePhoto
+                      ? "w-1.5 h-1.5 bg-white"
+                      : "w-1 h-1 bg-white/50"
+                  }`}
+                />
+              ))}
+            </div>
+          )}
 
           {/* Gradient overlay for readability */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
 
           {/* TRENDING badge — top-left */}
           {r.rating >= 4.6 && (

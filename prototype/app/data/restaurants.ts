@@ -8,19 +8,26 @@ export interface Restaurant {
   lat: number;
   lng: number;
   photo: string;
+  photos: string[];
   available: boolean;
   spotsLeft: number | null;
   nextAvailable: string | null;
   timeSlots: string[];
+  unavailableSlots: string[];
   cyclingMinutes: number;
   vibes: string[];
   bestTime: string;
   instagram: string;
   website: string;
+  phone: string;
+  menuUrl: string | null;
   maxDuration: number | null;
   description: string;
   hasOffer: boolean;
   offerText: string | null;
+  hasMichelinStar: boolean;
+  isNew: boolean;
+  dogFriendly: boolean;
 }
 
 export interface Event {
@@ -51,10 +58,16 @@ export const mockRestaurants: Restaurant[] = [
     lat: 52.3535,
     lng: 4.9275,
     photo: "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=600&h=400&fit=crop",
+    photos: [
+      "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=600&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?w=600&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1528823872057-9c018a7a7553?w=600&h=400&fit=crop",
+    ],
     available: true,
     spotsLeft: 2,
     nextAvailable: null,
     timeSlots: ["18:30", "19:00", "20:30"],
+    unavailableSlots: ["17:30", "21:00"],
     cyclingMinutes: 8,
     vibes: ["Date night", "Garden seating", "Seasonal"],
     bestTime: "Tuesday–Thursday evenings",
@@ -62,8 +75,13 @@ export const mockRestaurants: Restaurant[] = [
     website: "https://restaurantdekas.com",
     maxDuration: 120,
     description: "Set in a former greenhouse, De Kas serves a daily-changing menu using ingredients from its own garden.",
+    phone: "+31 20 462 4562",
+    menuUrl: "https://restaurantdekas.com/menu",
     hasOffer: true,
     offerText: "15% off lunch menu this week",
+    hasMichelinStar: false,
+    isNew: false,
+    dogFriendly: false,
   },
   {
     id: "2",
@@ -75,10 +93,16 @@ export const mockRestaurants: Restaurant[] = [
     lat: 52.3612,
     lng: 4.9167,
     photo: "https://images.unsplash.com/photo-1537047902294-62a40c20a6ae?w=600&h=400&fit=crop",
+    photos: [
+      "https://images.unsplash.com/photo-1537047902294-62a40c20a6ae?w=600&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=600&h=400&fit=crop",
+    ],
     available: true,
     spotsLeft: 5,
     nextAvailable: null,
     timeSlots: ["18:00", "19:30", "20:00", "21:00"],
+    unavailableSlots: ["17:00"],
     cyclingMinutes: 5,
     vibes: ["Lively", "Group-friendly", "Casual fine"],
     bestTime: "Weekday evenings",
@@ -86,8 +110,13 @@ export const mockRestaurants: Restaurant[] = [
     website: "https://rijsel.com",
     maxDuration: 90,
     description: "Known for their legendary roast chicken and buzzy atmosphere in a former mechanics workshop.",
+    phone: "+31 20 463 2142",
+    menuUrl: null,
     hasOffer: false,
     offerText: null,
+    hasMichelinStar: false,
+    isNew: false,
+    dogFriendly: false,
   },
   {
     id: "3",
@@ -99,10 +128,16 @@ export const mockRestaurants: Restaurant[] = [
     lat: 52.3395,
     lng: 4.8830,
     photo: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&h=400&fit=crop",
+    photos: [
+      "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1550966871-3ed3cdb51f3a?w=600&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1592861956120-e524fc739696?w=600&h=400&fit=crop",
+    ],
     available: false,
     spotsLeft: null,
     nextAvailable: "Tomorrow 19:30",
     timeSlots: [],
+    unavailableSlots: [],
     cyclingMinutes: 12,
     vibes: ["Special occasion", "View", "Michelin star"],
     bestTime: "Book 2 weeks ahead",
@@ -110,8 +145,13 @@ export const mockRestaurants: Restaurant[] = [
     website: "https://cielbleurestaurant.nl",
     maxDuration: null,
     description: "Two Michelin-starred restaurant on the 23rd floor of the Okura Hotel with panoramic views of Amsterdam.",
+    phone: "+31 20 678 7111",
+    menuUrl: "https://cielbleurestaurant.nl/menu",
     hasOffer: false,
     offerText: null,
+    hasMichelinStar: true,
+    isNew: false,
+    dogFriendly: false,
   },
   {
     id: "4",
@@ -123,10 +163,16 @@ export const mockRestaurants: Restaurant[] = [
     lat: 52.3676,
     lng: 4.8932,
     photo: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&h=400&fit=crop",
+    photos: [
+      "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=600&h=400&fit=crop",
+    ],
     available: true,
     spotsLeft: 3,
     nextAvailable: null,
     timeSlots: ["18:00", "19:00", "20:00"],
+    unavailableSlots: ["17:00", "21:00"],
     cyclingMinutes: 6,
     vibes: ["Cozy", "Family-friendly", "Authentic"],
     bestTime: "Early evening",
@@ -134,8 +180,13 @@ export const mockRestaurants: Restaurant[] = [
     website: "https://mamamakan.nl",
     maxDuration: 90,
     description: "Authentic Indonesian home cooking in the heart of the Jordaan. Famous for their rijsttafel.",
+    phone: "+31 20 620 1903",
+    menuUrl: "https://mamamakan.nl/menu",
     hasOffer: true,
     offerText: "Free rijsttafel upgrade for groups of 4+",
+    hasMichelinStar: false,
+    isNew: false,
+    dogFriendly: true,
   },
   {
     id: "5",
@@ -147,10 +198,16 @@ export const mockRestaurants: Restaurant[] = [
     lat: 52.3580,
     lng: 4.8760,
     photo: "https://images.unsplash.com/photo-1544025162-d76694265947?w=600&h=400&fit=crop",
+    photos: [
+      "https://images.unsplash.com/photo-1544025162-d76694265947?w=600&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=600&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=600&h=400&fit=crop",
+    ],
     available: false,
     spotsLeft: null,
     nextAvailable: "Saturday 20:00",
     timeSlots: [],
+    unavailableSlots: [],
     cyclingMinutes: 10,
     vibes: ["Avant-garde", "Chef's table", "Tasting menu"],
     bestTime: "Book 3 weeks ahead",
@@ -158,8 +215,13 @@ export const mockRestaurants: Restaurant[] = [
     website: "https://moshik.nl",
     maxDuration: null,
     description: "Two Michelin-starred tasting menu experience by Chef Moshik Roth.",
+    phone: "+31 20 210 2060",
+    menuUrl: null,
     hasOffer: false,
     offerText: null,
+    hasMichelinStar: true,
+    isNew: false,
+    dogFriendly: false,
   },
   {
     id: "6",
@@ -171,10 +233,16 @@ export const mockRestaurants: Restaurant[] = [
     lat: 52.3700,
     lng: 4.8830,
     photo: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&h=400&fit=crop",
+    photos: [
+      "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1560624052-449f5ddf0c31?w=600&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1551218808-94e220e084d2?w=600&h=400&fit=crop",
+    ],
     available: true,
     spotsLeft: 8,
     nextAvailable: null,
     timeSlots: ["17:30", "18:30", "19:30", "20:30", "21:30"],
+    unavailableSlots: [],
     cyclingMinutes: 4,
     vibes: ["Casual", "Wine bar", "Terrace"],
     bestTime: "Any evening",
@@ -182,8 +250,13 @@ export const mockRestaurants: Restaurant[] = [
     website: "https://barparry.nl",
     maxDuration: null,
     description: "Laid-back Mediterranean wine bar in the Jordaan with a lovely terrace.",
+    phone: "+31 20 737 0812",
+    menuUrl: "https://barparry.nl/menu",
     hasOffer: true,
     offerText: "Happy hour wines 50% off before 18:00",
+    hasMichelinStar: false,
+    isNew: true,
+    dogFriendly: true,
   },
   {
     id: "7",
@@ -195,10 +268,15 @@ export const mockRestaurants: Restaurant[] = [
     lat: 52.3540,
     lng: 4.9120,
     photo: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=400&fit=crop",
+    photos: [
+      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=600&h=400&fit=crop",
+    ],
     available: true,
     spotsLeft: null,
     nextAvailable: null,
     timeSlots: ["17:00", "18:00", "19:00", "20:00"],
+    unavailableSlots: ["16:00"],
     cyclingMinutes: 7,
     vibes: ["Casual", "Local favourite", "Authentic"],
     bestTime: "Anytime",
@@ -206,8 +284,13 @@ export const mockRestaurants: Restaurant[] = [
     website: "https://spangmakandra.nl",
     maxDuration: null,
     description: "The best Surinamese food in Amsterdam. No-frills, incredible flavour.",
+    phone: "+31 20 670 5081",
+    menuUrl: null,
     hasOffer: false,
     offerText: null,
+    hasMichelinStar: false,
+    isNew: false,
+    dogFriendly: false,
   },
   {
     id: "8",
@@ -219,10 +302,16 @@ export const mockRestaurants: Restaurant[] = [
     lat: 52.3650,
     lng: 4.9010,
     photo: "https://images.unsplash.com/photo-1559329007-40df8a9345d8?w=600&h=400&fit=crop",
+    photos: [
+      "https://images.unsplash.com/photo-1559329007-40df8a9345d8?w=600&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1515669097368-22e68427d265?w=600&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=600&h=400&fit=crop",
+    ],
     available: true,
     spotsLeft: 1,
     nextAvailable: null,
     timeSlots: ["19:00", "21:00"],
+    unavailableSlots: ["18:00", "20:00"],
     cyclingMinutes: 3,
     vibes: ["Date night", "Intimate", "Wine pairing"],
     bestTime: "Mid-week for best availability",
@@ -230,8 +319,13 @@ export const mockRestaurants: Restaurant[] = [
     website: "https://kaagmanenkortekaas.nl",
     maxDuration: 120,
     description: "Intimate neighbourhood restaurant with a daily-changing 4-course menu.",
+    phone: "+31 20 845 1723",
+    menuUrl: "https://kaagmanenkortekaas.nl/menu",
     hasOffer: true,
     offerText: "Complimentary wine pairing on Tuesdays",
+    hasMichelinStar: false,
+    isNew: true,
+    dogFriendly: false,
   },
   {
     id: "9",
@@ -243,10 +337,15 @@ export const mockRestaurants: Restaurant[] = [
     lat: 52.3730,
     lng: 4.8790,
     photo: "https://images.unsplash.com/photo-1498654896293-37aacf113fd9?w=600&h=400&fit=crop",
+    photos: [
+      "https://images.unsplash.com/photo-1498654896293-37aacf113fd9?w=600&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&h=400&fit=crop",
+    ],
     available: false,
     spotsLeft: null,
     nextAvailable: "Thursday 19:00",
     timeSlots: [],
+    unavailableSlots: [],
     cyclingMinutes: 9,
     vibes: ["Classic", "Group-friendly", "Italian soul"],
     bestTime: "Weekday lunch",
@@ -254,8 +353,13 @@ export const mockRestaurants: Restaurant[] = [
     website: "https://toscanini.nl",
     maxDuration: null,
     description: "Amsterdam's most beloved Italian restaurant. Authentic, generous, packed every night.",
+    phone: "+31 20 623 2813",
+    menuUrl: null,
     hasOffer: false,
     offerText: null,
+    hasMichelinStar: false,
+    isNew: false,
+    dogFriendly: false,
   },
   {
     id: "10",
@@ -267,10 +371,15 @@ export const mockRestaurants: Restaurant[] = [
     lat: 52.3660,
     lng: 4.8960,
     photo: "https://images.unsplash.com/photo-1424847651672-bf20a4b0982b?w=600&h=400&fit=crop",
+    photos: [
+      "https://images.unsplash.com/photo-1424847651672-bf20a4b0982b?w=600&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?w=600&h=400&fit=crop",
+    ],
     available: true,
     spotsLeft: 4,
     nextAvailable: null,
     timeSlots: ["18:00", "19:30", "21:00"],
+    unavailableSlots: ["17:00", "20:30"],
     cyclingMinutes: 5,
     vibes: ["Trendy", "Natural wine", "Sharing plates"],
     bestTime: "Friday evening",
@@ -278,8 +387,13 @@ export const mockRestaurants: Restaurant[] = [
     website: "https://volt.nl",
     maxDuration: 90,
     description: "Modern bistronomy with creative sharing plates and an excellent natural wine list.",
+    phone: "+31 20 471 5544",
+    menuUrl: "https://volt.nl/menu",
     hasOffer: true,
     offerText: "3-course menu for 35 on weeknights",
+    hasMichelinStar: false,
+    isNew: true,
+    dogFriendly: true,
   },
 ];
 
@@ -334,7 +448,7 @@ export const mockEvents: Event[] = [
 export const cuisineOptions = [
   "Dutch", "Indonesian", "Italian", "Japanese", "French",
   "Surinamese", "Indian", "Mediterranean", "Turkish", "Chinese",
-  "Thai", "Mexican", "Korean", "Ethiopian", "Vegan",
+  "Thai", "Mexican", "Korean", "Ethiopian", "Vegan", "Halal",
 ];
 
 export const vibeOptions = [

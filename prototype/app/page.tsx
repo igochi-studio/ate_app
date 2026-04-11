@@ -4,16 +4,16 @@ import { useState, useCallback } from "react";
 import { AnimatePresence, LayoutGroup } from "framer-motion";
 import { mockRestaurants, mockEvents } from "./data/restaurants";
 import type { Restaurant, Event } from "./data/restaurants";
-import OnboardingFlow from "./components/OnboardingFlow";
-import TabBar from "./components/TabBar";
-import RadarView from "./components/RadarView";
-import SearchView from "./components/SearchView";
-import EventsView from "./components/EventsView";
-import FavouritesView from "./components/FavouritesView";
-import ProfileView from "./components/ProfileView";
-import RestaurantDetail from "./components/RestaurantDetail";
+import OnboardingFlow from "./components-v2/OnboardingFlow";
+import TabBar from "./components-v2/TabBar";
+import RadarView from "./components-v2/RadarView";
+import EventsView from "./components-v2/EventsView";
+import FavouritesView from "./components-v2/FavouritesView";
+import ProfileView from "./components-v2/ProfileView";
+import CommunityView from "./components-v2/CommunityView";
+import RestaurantDetail from "./components-v2/RestaurantDetail";
 
-type Tab = "radar" | "search" | "event" | "favourites" | "profile";
+type Tab = "radar" | "community" | "event" | "favourites" | "profile";
 
 export default function Home() {
   const [onboarded, setOnboarded] = useState(false);
@@ -38,7 +38,7 @@ export default function Home() {
 
   return (
     <LayoutGroup>
-      <div className="h-screen flex flex-col bg-cream-light overflow-hidden">
+      <div className="h-screen flex flex-col bg-ate-white overflow-hidden">
         <div className="flex-1 overflow-hidden">
           {activeTab === "radar" && (
             <RadarView
@@ -47,17 +47,10 @@ export default function Home() {
               favouriteIds={favouriteIds}
               onToggleFavourite={toggleFavourite}
               onSelectRestaurant={setSelectedRestaurant}
-              onOpenSearch={() => setActiveTab("search")}
             />
           )}
-          {activeTab === "search" && (
-            <SearchView
-              key="search"
-              restaurants={mockRestaurants}
-              favouriteIds={favouriteIds}
-              onToggleFavourite={toggleFavourite}
-              onSelectRestaurant={setSelectedRestaurant}
-            />
+          {activeTab === "community" && (
+            <CommunityView key="community" />
           )}
           {activeTab === "event" && (
             <EventsView
